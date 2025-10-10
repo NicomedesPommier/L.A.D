@@ -1,0 +1,15 @@
+services:
+  ros:
+    build: .
+    image: qcar_docker-ros
+    ports:
+      - "9090:9090"  # rosbridge
+      - "7000:7000"  # estático (URDF/meshes)
+      - "8080:8080"  # WVS (solo si lo activas)
+    environment:
+      - CORS_ALLOW_ORIGIN=http://localhost:3000
+      - ENABLE_JSP=1
+      - ENABLE_ROSAPI=0
+      - ENABLE_WVS=0
+      - ENABLE_TURTLESIM=1
+      # - XACRO_ARGS=use_camera:=true   # si tu xacro acepta args
