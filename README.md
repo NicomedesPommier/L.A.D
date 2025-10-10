@@ -1,123 +1,203 @@
-L.A.D (Learn Autonomous Driving) es una plataforma web creada para acompañar cursos de robótica y conducción autónoma. Este README reúne en un solo lugar cómo funciona la aplicación, qué servicios necesita alrededor y cómo personalizar los contenidos para tu laboratorio.
+# L.A.D (Learn Autonomous Driving)
+
+L.A.D es un ecosistema pensado para cursos de robótica y conducción autónoma. Reúne tres piezas principales:
+
+1. **Frontend React** (este repositorio) donde el estudiantado consume las unidades, niveles y widgets ROS.
+2. **Backend REST** que gestiona autenticación, catálogo de contenidos y progreso individual.
+3. **Simuladores ROS 2** (con rosbridge) que habilitan prácticas interactivas directamente desde el navegador.
+
+Este README consolida y amplía toda la documentación previa para los tres repositorios de referencia. Aquí encontrarás desde la visión general hasta guías de despliegue, administración de contenidos y buenas prácticas para operar el laboratorio completo.
+
+---
 
 ## Tabla de contenido
 
-1. [Visión general](#visión-general)
-2. [Cómo funciona el flujo de aprendizaje](#cómo-funciona-el-flujo-de-aprendizaje)
-3. [Servicios externos requeridos](#servicios-externos-requeridos)
-4. [Requisitos y variables de entorno](#requisitos-y-variables-de-entorno)
+1. [Visión general y componentes](#visión-general-y-componentes)
+2. [Arquitectura de referencia](#arquitectura-de-referencia)
+3. [Requisitos previos](#requisitos-previos)
+4. [Variables de entorno](#variables-de-entorno)
 5. [Instalación y scripts de npm](#instalación-y-scripts-de-npm)
-6. [Estructura del código](#estructura-del-código)
-7. [Integración con ROS 2 y simuladores](#integración-con-ros-2-y-simuladores)
-8. [Orquestación con Docker Compose](#orquestación-con-docker-compose)
-9. [Gestión de unidades, niveles y objetivos](#gestión-de-unidades-niveles-y-objetivos)
-10. [Buenas prácticas de versionado](#buenas-prácticas-de-versionado)
-11. [Próximos pasos sugeridos](#próximos-pasos-sugeridos)
+6. [Estructura del frontend](#estructura-del-frontend)
+7. [Backend de referencia](#backend-de-referencia)
+8. [Simuladores ROS 2 y rosbridge](#simuladores-ros-2-y-rosbridge)
+9. [Orquestación completa con Docker Compose](#orquestación-completa-con-docker-compose)
+10. [Administración de unidades, niveles y objetivos](#administración-de-unidades-niveles-y-objetivos)
+11. [Personalización del contenido educativo](#personalización-del-contenido-educativo)
+12. [Pruebas, QA y monitoreo](#pruebas-qa-y-monitoreo)
+13. [Guía de despliegue a producción](#guía-de-despliegue-a-producción)
+14. [Solución de problemas frecuentes](#solución-de-problemas-frecuentes)
+15. [Buenas prácticas de versionado y colaboración](#buenas-prácticas-de-versionado-y-colaboración)
+16. [Roadmap sugerido](#roadmap-sugerido)
 
-## Visión general
+---
 
-La aplicación React se centra en guiar al estudiantado por un catálogo de **unidades** y **niveles** que combinan teoría, prácticas y simulaciones. Utiliza React Router para estructurar la navegación (`/learn/:unit/:level`), la Context API para manejar autenticación y progreso, y componentes especializados para interactuar con ROS a través de rosbridge.
+## Visión general y componentes
 
-### Características principales
+L.A.D propone un flujo de aprendizaje basado en **unidades** y **niveles** que mezclan teoría con experimentos ROS. Cada nivel puede incluir slides, videos, evaluaciones y widgets en vivo que se conectan a rosbridge para publicar o suscribirse a tópicos.
 
-- **Acceso autenticado.** En `Home.jsx` se muestra un panel de login que solicita usuario y contraseña. Al iniciar sesión se obtiene un token JWT desde `/api/token/` y se almacena en `localStorage` mediante el `AuthContext`.
-- **Catálogo progresivo.** Una vez dentro, `Learn.jsx` carga las unidades desde `/api/units/`, calcula qué niveles están completos y permite navegar entre ellos sin abandonar la página.
-- **Seguimiento personalizado.** Cada nivel incluye objetivos que el backend marca como logrados. La vista mezcla los datos estáticos del catálogo con el progreso del usuario (`/api/levels/progress/me/`).
-- **Widgets conectados a ROS.** En la carpeta `src/levels` se declaran misiones que utilizan hooks como `useRoslib` para publicar y suscribirse a tópicos (`REACT_APP_ROSBRIDGE_URL`). Esto permite enviar comandos, leer sensores o lanzar escenarios desde el navegador.
+### Frontend (este repositorio)
 
-## Cómo funciona el flujo de aprendizaje
+- Construido con **Create React App**.
+- Usa **React Router** para la navegación (`/learn/:unitSlug/:levelSlug`).
+- Gestiona autenticación y progreso con la **Context API** (`AuthContext`).
+- Integra ROS mediante hooks personalizados (`useRoslib`, `useStableRosSub`).
+- Almacena el token JWT en `localStorage` y añade cabeceras autenticadas en `apiFetch`.
 
-1. **Inicio de sesión (`Home.jsx`).**
-   - El formulario llama a `login(username, password)` del `AuthContext`.
-   - Si la API devuelve un token válido, la sesión se guarda y se redirige a `/learn`.
-2. **Carga de catálogo (`Learn.jsx`).**
-   - `Learn.jsx` solicita `GET /units/` y guarda la respuesta en estado local.
-   - Si hay un `unitSlug` en la URL se selecciona esa unidad en la barra lateral; de lo contrario se muestra un placeholder.
-3. **Progreso individual.**
-   - Después de obtener las unidades, se pide `GET /levels/progress/me/`.
-   - `mergeProgressIntoUnits` combina ambos resultados para que cada nivel indique si está completo y qué objetivos están alcanzados.
-4. **Exploración de niveles (`UnitPage.jsx` y `LearnLevel.jsx`).**
-   - `UnitPage.jsx` muestra una lista de niveles con indicadores de estado.
-   - `LearnLevel.jsx` recupera la definición del nivel (slides, videos, widgets ROS) y permite reportar objetivos completados.
+### Backend (API REST)
 
-> 🧭 **Tip:** La consola del navegador registra cada petición (`[apiFetch]`) y su respuesta, útil para depurar integraciones con la API.
+- Expone endpoints `POST /api/token/`, `GET /api/units/`, `GET /api/levels/progress/me/`, `POST /api/objectives/complete/`, etc.
+- Puede implementarse con Django REST Framework, FastAPI u otro framework que entregue JSON con CORS habilitado.
+- Mantiene modelos de Unidades, Niveles, Objetivos, Recursos y Progreso.
 
-## Servicios externos requeridos
+### ROS 2 + rosbridge
 
-La aplicación asume la existencia de tres servicios externos. Puedes desplegarlos de forma local o en contenedores.
+- Corre `rosbridge_server` sobre el workspace ROS utilizado en clase.
+- Expone un WebSocket (`ws://localhost:9090` por defecto).
+- Se conecta al frontend por medio de `roslibjs` para interactuar con robots, simuladores y evaluadores automáticos.
 
-| Servicio | Rol | Endpoint por defecto |
+---
+
+## Arquitectura de referencia
+
+```
+┌──────────────────────┐          ┌────────────────────────────┐          ┌──────────────────────────────┐
+│  Frontend React      │  HTTPS   │  API REST / Backend        │   TCP    │  ROS 2 + rosbridge          │
+│  (npm start / build) │◀────────▶│  (Django, FastAPI, etc.)   │◀────────▶│  Gazebo, RViz, nodos custom │
+└──────────────────────┘          └────────────────────────────┘          └──────────────────────────────┘
+         ▲                                      ▲                                        ▲
+         │                                      │                                        │
+         │ JWT                                  │ DB (PostgreSQL, SQLite)                │ Topics, servicios, acciones
+         │                                      │                                        │
+```
+
+- **Autenticación**: el frontend solicita un token JWT y lo usa en cada `apiFetch`.
+- **Catálogo**: `Learn.jsx` y `UnitPage.jsx` consumen `/api/units/` y fusionan los datos con el progreso devuelto por `/api/levels/progress/me/`.
+- **ROS**: los widgets dentro de `src/levels` publican/escuchan tópicos para validar objetivos en tiempo real.
+
+---
+
+## Requisitos previos
+
+| Componente | Versión recomendada | Notas |
 | --- | --- | --- |
-| **Backend REST** | Autenticación, catálogo de unidades/niveles y progreso del estudiante. | `http://localhost:8000/api` |
-| **Base de datos** | Persistencia del backend (PostgreSQL, SQLite, etc.). | Según la configuración del backend |
-| **rosbridge** | Puente WebSocket para interactuar con ROS 2. | `ws://localhost:9090` |
+| Node.js | ≥ 18.x | Requerido para desarrollo del frontend. |
+| npm | ≥ 9.x | Incluido con Node. |
+| Docker | ≥ 24.x | Facilita el despliegue de backend, base de datos y rosbridge. |
+| Docker Compose | v2 | Opcional para orquestar los servicios. |
+| Python | ≥ 3.10 | Necesario si implementas el backend de referencia con Django. |
+| ROS 2 | Humble / Foxy | Debe incluir `rosbridge_server` y los paquetes de tus misiones. |
+| Base de datos | PostgreSQL 14+ (recomendado) | Puedes usar SQLite en desarrollo. |
 
-El backend de referencia se puede construir con Django REST Framework, FastAPI u otro framework que exponga los endpoints esperados. rosbridge debe ejecutarse sobre el workspace ROS con los paquetes de las misiones que utilizará el curso.
+---
 
-## Requisitos y variables de entorno
+## Variables de entorno
 
-### Requisitos mínimos
-
-- Node.js ≥ 18 y npm.
-- Docker (opcional pero recomendado) para levantar backend y rosbridge en contenedores reproducibles.
-- Acceso a un backend que implemente los endpoints `/api/token/`, `/api/units/` y `/api/levels/progress/me/`.
-
-### Variables de entorno
-
-Define estas variables antes de compilar o ejecutar la app (puedes usar un archivo `.env` en la raíz del proyecto):
+Define las variables en un archivo `.env` en la raíz o inyectadas en el entorno de build.
 
 | Variable | Descripción | Valor por defecto |
 | --- | --- | --- |
-| `REACT_APP_API_BASE` | URL base para las peticiones REST. | `http://localhost:8000/api` |
-| `REACT_APP_ROSBRIDGE_URL` | URL WebSocket hacia rosbridge. | `ws://localhost:9090` |
+| `REACT_APP_API_BASE` | URL base del backend REST. | `http://localhost:8000/api` |
+| `REACT_APP_ROSBRIDGE_URL` | WebSocket hacia rosbridge. | `ws://localhost:9090` |
+| `REACT_APP_ENABLE_SSO` | Activa integraciones externas (ej. Keycloak). | `false` |
+| `REACT_APP_DEFAULT_UNIT` | Slug de la unidad mostrada al ingresar. | `null` |
 
-> ⚠️ Las variables se inyectan en tiempo de build. Si cambias la URL después de `npm run build`, recompila o reconstruye la imagen Docker.
+> ⚠️ Las variables prefijadas con `REACT_APP_` se leen en tiempo de build. Cambios posteriores exigen recompilar el frontend o regenerar la imagen Docker.
+
+Para el backend y rosbridge considera además:
+
+- `DJANGO_SECRET_KEY`, `DATABASE_URL`, `CORS_ALLOWED_ORIGINS` (Django).
+- `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD` (PostgreSQL).
+- `ROS_DOMAIN_ID`, `ROS_PACKAGE_PATH` (ROS 2), según tu infraestructura.
+
+---
 
 ## Instalación y scripts de npm
 
 ```bash
-npm install        # Instala dependencias
-npm start          # Servidor de desarrollo en http://localhost:3000
+npm install        # Instala dependencias del frontend
+npm start          # Servidor de desarrollo http://localhost:3000
 npm test           # Ejecuta pruebas de React (Jest + Testing Library)
-npm run build      # Compila la versión de producción en /build
-npm run lint       # Si añades ESLint, puedes exponerlo aquí
+npm run build      # Compila la versión de producción en build/
+npm run lint       # (Opcional) Ejecuta ESLint si está configurado
 ```
 
-- En modo desarrollo se utiliza `react-scripts` con recarga en caliente.
-- `npm test` ejecuta las pruebas incluidas (por defecto `App.test.js`).
-- `npm run build` genera archivos estáticos listos para un servidor como Nginx o para empaquetar en Docker.
+- `npm start` crea un proxy para `/api` si configuras `setupProxy.js`.
+- `npm test` corre en modo watch; usa `CI=true npm test` para entornos CI.
+- `npm run build` genera archivos estáticos listos para Nginx, S3 o contenedores.
 
-## Estructura del código
+---
+
+## Estructura del frontend
 
 ```
 src/
-├── App.jsx / App.js       # Rutas principales de React Router
-├── components/            # UI reutilizable y widgets de simulación
-├── context/               # Contextos de autenticación y progreso
-├── hooks/                 # Hooks para ROS, peticiones y utilidades
-├── levels/                # Definiciones de las misiones por nivel
-├── pages/                 # Pantallas de Home, Learn, UnitPage y Level
-├── parches/               # Fixes o overrides puntuales
-├── styles/                # Estilos SCSS organizados por vistas y componentes
-└── config.js              # Punto centralizado para URLs y toggles
+├── App.jsx / App.js          # Punto de entrada y rutas
+├── components/               # UI reutilizable y widgets ROS
+├── context/                  # AuthContext, ProgressContext
+├── hooks/                    # useRoslib, useApiFetch, etc.
+├── levels/                   # Definiciones de misiones y assets por nivel
+├── pages/                    # Home, Learn, UnitPage, LearnLevel
+├── parches/                  # Overrides puntuales
+├── styles/                   # SCSS modularizado
+└── config.js                 # URLs y toggles centrales
 ```
 
-Algunos archivos clave para entender el flujo:
+**Archivos clave**
 
-- `src/context/AuthContext.jsx`: maneja login/logout, guarda el token en `localStorage` y expone `apiFetch` con cabeceras autenticadas.
-- `src/pages/Learn.jsx`: descarga catálogo y progreso, controla el estado de la barra lateral y decide qué unidad está activa.
-- `src/pages/LearnLevel.jsx`: renderiza el contenido del nivel seleccionado y reporta avances.
-- `src/hooks/useRoslib.js`: encapsula la conexión a rosbridge (suscripciones, publicaciones, acciones).
+- `src/context/AuthContext.jsx`: maneja `login`, `logout`, refresh de token y `apiFetch` con cabeceras JWT.
+- `src/pages/Learn.jsx`: descarga catálogo, sincroniza progreso y decide la unidad activa.
+- `src/pages/LearnLevel.jsx`: renderiza el contenido del nivel y coordina widgets ROS.
+- `src/hooks/useRoslib.js`: encapsula la conexión WebSocket con rosbridge, reconexión y limpieza.
 
-## Integración con ROS 2 y simuladores
+---
 
-Las misiones aprovechan rosbridge para comunicarse con ROS 2. Desde el frontend se pueden realizar acciones como:
+## Backend de referencia
 
-- Publicar en tópicos (`/cmd_vel`, `/mission/goal`).
-- Suscribirse a sensores para actualizar widgets en tiempo real.
-- Invocar servicios o acciones (por ejemplo, iniciar un escenario Gazebo o validar un checkpoint).
+Aunque puedes implementar la API con cualquier stack, la referencia oficial utiliza **Django + Django REST Framework**.
 
-Un contenedor base puede iniciarse con:
+### Instalación rápida (Django)
+
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver 0.0.0.0:8000
+```
+
+### Modelos mínimos sugeridos
+
+- `Unit`: `slug`, `title`, `order`, `is_active`.
+- `Level`: FK a `Unit`, `slug`, `title`, `order`, `is_active`, `content` (JSON o Markdown), `ros_config`.
+- `Objective`: FK a `Level`, `code`, `description`, `points`, `ros_topic`.
+- `UserProgress`: FK a `User` y `Level`, `completed`, `objectives_completed` (array).
+
+### Endpoints clave
+
+| Método | Ruta | Descripción |
+| --- | --- | --- |
+| `POST` | `/api/token/` | Devuelve JWT (`access`, `refresh`). |
+| `GET` | `/api/units/` | Lista unidades y niveles asociados. |
+| `GET` | `/api/levels/<slug>/` | Recupera detalle completo de un nivel. |
+| `GET` | `/api/levels/progress/me/` | Progreso del usuario autenticado. |
+| `POST` | `/api/objectives/complete/` | Marca un objetivo como cumplido (se puede integrar con ROS). |
+
+### Administración vía panel
+
+![Panel principal de Django admin mostrando los modelos de Learning](images/dashboard.png)
+
+- Accede a `http://localhost:8000/admin` con un usuario staff.
+- Crea unidades, niveles y objetivos siguiendo los formularios del panel.
+- Usa `python manage.py loaddata fixtures.json` para cargas masivas.
+
+---
+
+## Simuladores ROS 2 y rosbridge
+
+Los niveles pueden conectarse a cualquier nodo ROS 2 mientras exista rosbridge en el mismo dominio.
+
+### Lanzar rosbridge rápidamente
 
 ```bash
 docker run --rm -it \
@@ -127,9 +207,22 @@ docker run --rm -it \
   ros2 launch rosbridge_server rosbridge_websocket_launch.xml
 ```
 
-Desde los niveles puedes parametrizar a qué tópicos o servicios conectarte. Mantén la misma convención en el backend para que los objetivos se marquen como completados cuando el simulador informe los resultados.
+### Checklist de configuración
 
-## Orquestación con Docker Compose
+1. **Workspace preparado** con paquetes y launch files para tus misiones.
+2. **rosbridge** corriendo en el mismo dominio (configura `ROS_DOMAIN_ID` si usas DDS).
+3. **Firewall** habilitando el puerto WebSocket (9090 por defecto).
+4. **Simuladores** (Gazebo, Ignition, Webots, RViz) listos para publicar tópicos utilizados en los niveles.
+
+### Integración desde el frontend
+
+- Define los widgets en `src/levels/<unit>/<level>.js` con los tópicos y servicios necesarios.
+- Usa los hooks `useRosPublisher`, `useRosSubscriber` y `useRosService` para encapsular la lógica.
+- Marca los objetivos cumplidos llamando a la API cuando se recibe la confirmación desde ROS.
+
+---
+
+## Orquestación completa con Docker Compose
 
 ```yaml
 services:
@@ -149,6 +242,7 @@ services:
     environment:
       - DJANGO_SECRET_KEY=changeme
       - DATABASE_URL=postgres://lad_user:lad_pass@db:5432/lad
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000
     depends_on:
       - db
 
@@ -157,6 +251,8 @@ services:
     command: ros2 launch rosbridge_server rosbridge_websocket_launch.xml
     ports:
       - "9090:9090"
+    volumes:
+      - ./ros2_ws:/root/ros2_ws:ro
 
   frontend:
     build: .
@@ -173,4 +269,111 @@ volumes:
   lad_pgdata:
     driver: local
 ```
+
+### Persistencia y copias de seguridad
+
+- Usa volúmenes nombrados (`lad_pgdata`) o binds (`./data/db`) para no perder la base de datos.
+- Respalda con `docker compose exec db pg_dump -U lad_user lad > backup.sql`.
+- Restaura con `cat backup.sql | docker compose exec -T db psql -U lad_user lad`.
+- Ejecuta migraciones dentro del contenedor `api` (`docker compose exec api python manage.py migrate`).
+
+---
+
+## Administración de unidades, niveles y objetivos
+
+1. **Inicia sesión** en `http://localhost:8000/admin` con una cuenta de staff.
+2. **Crea unidades** definidas por `slug`, `title`, `order`, `is_active`.
+3. **Agrega niveles** a cada unidad y configura su orden de aparición.
+4. **Define objetivos** con códigos únicos y puntajes que se corresponden con eventos ROS.
+5. **Verifica el catálogo** desde la vista de niveles para confirmar estado y orden.
+6. **Prueba en el frontend** con `npm start` para asegurarte de que los cambios se reflejan.
+
+| Pantalla | Captura |
+| --- | --- |
+| Login del panel | ![Pantalla de inicio de sesión del panel administrativo](images/login.png) |
+| Dashboard | ![Panel principal con los modelos de aprendizaje](images/dashboard.png) |
+| Crear Unidad | ![Formulario para crear una unidad](images/add-unit.png) |
+| Crear Nivel | ![Formulario para crear un nivel con objetivos](images/add-level.png) |
+| Crear Objetivo | ![Formulario para crear un objetivo](images/add-objective.png) |
+
+---
+
+## Personalización del contenido educativo
+
+- **Layouts personalizados:** puedes crear nuevos componentes en `src/components` y referenciarlos desde `src/levels`.
+- **Assets multimedia:** coloca imágenes o videos en `public/` o en servicios externos (YouTube, Vimeo) y referencia las URLs.
+- **Integraciones externas:** activa `REACT_APP_ENABLE_SSO` y agrega el flujo en `AuthContext` para soportar SSO.
+- **Idiomas:** utiliza `react-intl` o `i18next` si necesitas internacionalización; mantiene los textos en archivos JSON.
+- **Gamificación:** extiende el backend con badges, logros y tablas de clasificación; expón endpoints y consúmelos desde el frontend.
+
+### Checklist para nuevos niveles
+
+1. Define el objetivo pedagógico y los tópicos ROS a utilizar.
+2. Prepara el contenido (Markdown, slides, videos) y súbelo a la API.
+3. Implementa widgets en `src/levels/<unit>/<level>.js`.
+4. Configura el backend con objetivos y validaciones (webhooks o callbacks ROS).
+5. Prueba el flujo completo (frontend → backend → ROS → backend → frontend).
+
+---
+
+## Pruebas, QA y monitoreo
+
+- **Frontend:** usa React Testing Library (`npm test`) para validar componentes críticos y hooks personalizados.
+- **Backend:** implementa pruebas unitarias y de integración (pytest o Django `TestCase`).
+- **ROS:** crea launch tests que verifiquen que los nodos publican/suscriben correctamente.
+- **Monitoreo:** integra Prometheus + Grafana o herramientas equivalentes para observar consumo de recursos, latencia y errores.
+- **Registro de eventos:** el frontend registra peticiones en consola (`[apiFetch]`); puedes añadir Sentry para telemetría.
+
+---
+
+## Guía de despliegue a producción
+
+1. **Compila el frontend:** `npm run build` y sirve los archivos con Nginx o dentro de un contenedor estático.
+2. **Configura HTTPS:** usa un reverse proxy (Nginx, Traefik) con certificados TLS.
+3. **Escala el backend:** ejecuta múltiples réplicas detrás de Gunicorn/Uvicorn y un balanceador de carga.
+4. **Gestiona secretos:** almacena tokens y contraseñas en Vault, AWS Secrets Manager u opciones similares.
+5. **Observabilidad:** habilita logs centralizados (Elastic Stack, Loki) y alertas sobre métricas clave.
+6. **Respalda bases de datos y workspaces ROS** antes de cada actualización.
+
+### Deploy con contenedores
+
+- Construye imágenes versionadas (`lad/frontend:1.0.0`, `lad/api:1.0.0`).
+- Usa `docker compose -f docker-compose.prod.yml up -d` con configuraciones específicas de producción.
+- Considera Kubernetes para clusters multiusuario; define ConfigMaps/Secrets para las variables necesarias.
+
+---
+
+## Solución de problemas frecuentes
+
+| Problema | Posibles causas | Solución |
+| --- | --- | --- |
+| El frontend no inicia sesión | URL incorrecta en `REACT_APP_API_BASE`, CORS bloqueado | Verifica variables, habilita CORS en el backend, revisa logs de red. |
+| Widgets ROS no conectan | rosbridge caído, puerto bloqueado, dominio DDS distinto | Revisa `ros2 topic list`, confirma puerto 9090, alinea `ROS_DOMAIN_ID`. |
+| Cambios en `.env` no se reflejan | Build en caché | Ejecuta `npm run build` nuevamente o reconstruye la imagen. |
+| Carpetas faltan en GitHub | `.gitignore` las excluye o contienen otro repo | Agrega excepciones (`!carpeta/`) o elimina `.git` internos. |
+| `npm start` falla en Windows | Conflictos con rutas o puertos | Corre `set "PORT=3000" && npm start` o usa WSL2. |
+
+---
+
+## Buenas prácticas de versionado y colaboración
+
+1. Revisa `git status` antes de cada commit para confirmar que incluyes `images/`, `ros2_ws/`, etc.
+2. Evita repositorios anidados; si necesitas uno, conviértelo en submódulo (`git submodule add`).
+3. Usa ramas descriptivas (`feature/nuevo-widget`, `docs/actualizar-manual`).
+4. Adjunta capturas o GIFs cuando cambies la UI (carpeta `images/`).
+5. Automatiza lint y pruebas en CI (`GitHub Actions`, `GitLab CI`).
+6. Documenta breaking changes en el changelog y versiona las imágenes Docker.
+7. Recuerda que Git no almacena directorios vacíos: usa `.gitkeep` si necesitas reservarlos.
+
+---
+
+## Roadmap sugerido
+
+- Integrar evaluaciones automáticas conectadas a tópicos ROS para calificar misiones en tiempo real.
+- Añadir más escenarios (Turtlesim, Gazebo, Ignition, QCar) y documentarlos dentro de `src/levels`.
+- Publicar scripts de bootstrap para preparar ROS 2 + rosbridge en laboratorios universitarios.
+- Incorporar analíticas de aprendizaje (tiempo por nivel, objetivos fallidos) en dashboards administrativos.
+- Ofrecer soporte multitenant en el backend para múltiples cursos o sedes.
+
+---
 
