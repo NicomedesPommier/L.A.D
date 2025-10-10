@@ -1,61 +1,57 @@
 // src/hooks/useRoslib.js
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ROSLIB from "roslib";
-import { ROS_WS_URL } from "../config";
+import { getRosbridgeUrl } from "../ip";
 
-const isValidWsUrl = (u) => /^wss?:\/\/[^\s]+$/i.test(String(u || ""));
+const isValidWsUrl = (u) => /^wss?:\/\/[^:\/\s]+(:\d+)?(\/.*)?$/i.test(String(u || ""));
 
-export function useRoslib(url = ROS_WS_URL) {
+export function useRoslib() {
   const rosRef = useRef(null);
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    // 1) Crear instancia sin URL y fijar listeners ANTES de intentar conectar
+    const url = getRosbridgeUrl();
+
     const ros = new ROSLIB.Ros();
     rosRef.current = ros;
 
-    // Sink para evitar EventEmitter2 "error" sin listener (se queda aunque quitemos otros)
     const sinkError = () => {};
-    ros.on("error", sinkError);
-
-    const handleConnection = () => setConnected(true);
-    const handleClose = () => setConnected(false);
-    const handleError = (e) => {
+    const onConn = () => setConnected(true);
+    const onClose = () => setConnected(false);
+    const onErr = (e) => {
       // eslint-disable-next-line no-console
       console.error("[roslib] error:", e?.message || e);
       setConnected(false);
     };
 
-    ros.on("connection", handleConnection);
-    ros.on("close", handleClose);
-    ros.on("error", handleError);
+    ros.on("error", sinkError);
+    ros.on("connection", onConn);
+    ros.on("close", onClose);
+    ros.on("error", onErr);
 
-    // 2) Conectar en el próximo tick (mitiga StrictMode doble-mount)
     const t = setTimeout(() => {
       try {
         if (!isValidWsUrl(url)) throw new Error(`Invalid WebSocket URL: ${url}`);
         ros.connect(url);
       } catch (e) {
-        handleError(e);
+        onErr(e);
       }
     }, 0);
 
     return () => {
       clearTimeout(t);
-      try { ros.close(); } catch (_) {}
+      try { ros.close(); } catch {}
       try {
-        // 3) Limpieza dura: remover TODOS los listeners para no dejar emisores “huérfanos”
         if (typeof ros.removeAllListeners === "function") {
           ros.removeAllListeners("connection");
           ros.removeAllListeners("close");
           ros.removeAllListeners("error");
         }
-      } catch (_) {}
+      } catch {}
       rosRef.current = null;
     };
-  }, [url]);
+  }, []); // URL fija al montar (viene del único punto de verdad)
 
-  // --- APIs ESTABLES ---
   const subscribeTopic = useCallback((name, messageType, onMessage, opts = {}) => {
     const ros = rosRef.current;
     if (!ros) return () => {};
@@ -69,12 +65,12 @@ export function useRoslib(url = ROS_WS_URL) {
       queue_length: opts.queue_length,
     });
 
-    const handler = (msg) => { try { onMessage?.(msg); } catch (_) {} };
-    try { topic.subscribe(handler); } catch (_) {}
+    const handler = (msg) => { try { onMessage?.(msg); } catch {} };
+    try { topic.subscribe(handler); } catch {}
 
     return () => {
-      try { topic.unsubscribe(handler); } catch (_) {}
-      try { topic.unsubscribe(); } catch (_) {}
+      try { topic.unsubscribe(handler); } catch {}
+      try { topic.unsubscribe(); } catch {}
     };
   }, []);
 
@@ -89,11 +85,13 @@ export function useRoslib(url = ROS_WS_URL) {
       queue_size: opts.queue_size ?? 1,
     });
 
-    try { topic.advertise(); } catch (_) {}
+    try { topic.advertise(); } catch {}
 
     return {
-      publish: (msg) => { try { topic.publish(new ROSLIB.Message(msg)); } catch (_) {} },
-      unadvertise: () => { try { topic.unadvertise(); } catch (_) {} },
+      publish: (msg) => {
+        try { topic.publish(new ROSLIB.Message(msg)); } catch {}
+      },
+      unadvertise: () => { try { topic.unadvertise(); } catch {} },
     };
   }, []);
 
@@ -105,11 +103,7 @@ export function useRoslib(url = ROS_WS_URL) {
     const req = new ROSLIB.ServiceRequest(request);
 
     return new Promise((resolve, reject) => {
-      try {
-        svc.callService(req, resolve, reject);
-      } catch (e) {
-        reject(e);
-      }
+      try { svc.callService(req, resolve, reject); } catch (e) { reject(e); }
     });
   }, []);
 

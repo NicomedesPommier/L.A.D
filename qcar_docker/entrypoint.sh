@@ -6,6 +6,7 @@ source /ros2_ws/install/setup.bash
 # ===== Config =====
 : "${STATIC_PORT:=7000}"
 : "${WVS_PORT:=8080}"
+: "${USER_DEFINED_CORS_FLAG:=${CORS_ALLOW_ORIGIN+x}}"
 : "${CORS_ALLOW_ORIGIN:=http://localhost:8000}"
 : "${ENABLE_ROSAPI:=1}"
 : "${ENABLE_JSP:=1}"
@@ -13,6 +14,31 @@ source /ros2_ws/install/setup.bash
 : "${ENABLE_TURTLESIM:=0}"
 # Args opcionales para xacro (ej: "use_camera:=true")
 : "${XACRO_ARGS:=}"
+
+if [ "${USER_DEFINED_CORS_FLAG}" != "x" ]; then
+  CONFIG_PATH="${IP_CONFIG_PATH:-}"
+  if [ -n "${CONFIG_PATH}" ] && [ -r "${CONFIG_PATH}" ]; then
+    EXPOSED_IP="$(python3 - "${CONFIG_PATH}" <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+try:
+    with open(path, "r", encoding="utf-8") as fh:
+        data = json.load(fh)
+except (OSError, json.JSONDecodeError):
+    sys.exit(0)
+
+ip = (data.get("exposed_ip") or "").strip()
+if ip:
+    print(ip)
+PY
+)"
+    if [ -n "${EXPOSED_IP}" ]; then
+      CORS_ALLOW_ORIGIN="http://${EXPOSED_IP}:3000"
+    fi
+  fi
+fi
 
 # ===== Rutas desde qcar_description instalado =====
 QCAR_DESC_PREFIX="$(ros2 pkg prefix qcar_description)"
@@ -39,6 +65,3 @@ exec ros2 launch qcar_bringup web_viz.launch.py \
   static_port:="${STATIC_PORT}" \
   enable_rosapi:="$([ "${ENABLE_ROSAPI}" = "1" ] && echo true || echo false)" \
   enable_jsp:="$([ "${ENABLE_JSP}" = "1" ] && echo true || echo false)" \
-  enable_wvs:="$([ "${ENABLE_WVS}" = "1" ] && echo true || echo false)" \
-  wvs_port:="${WVS_PORT}" \
-  enable_turtlesim:="$([ "${ENABLE_TURTLESIM}" = "1" ] && echo true || echo false)"

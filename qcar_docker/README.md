@@ -40,6 +40,8 @@ El servicio expone, por defecto, los siguientes puertos en la máquina anfitrion
 
 La salida del contenedor mostrará la ruta del URDF generado, por ejemplo `http://localhost:7000/qcar_description/urdf/robot_runtime.urdf`.
 
+`IP_CONFIG_PATH`: ruta al archivo JSON compartido con la IP expuesta (por defecto `/config/ip_config.json`, montado desde `config/ip_config.json`).
+- `CORS_ALLOW_ORIGIN`: origen permitido para peticiones WebSocket/HTTP (por defecto `http://localhost:3000`). Si no defines esta variable, el `entrypoint` leerá `IP_CONFIG_PATH` y generará automáticamente `http://<ip-configurada>:3000`.
 ## Variables de entorno
 
 Puedes ajustar el comportamiento del launch editando las variables en `docker-compose.yml` o sobrescribiéndolas al ejecutar `docker compose`:

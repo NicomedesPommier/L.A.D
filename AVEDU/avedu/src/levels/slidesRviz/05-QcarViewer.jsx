@@ -6,6 +6,9 @@ import * as THREE from "three";
 import URDFLoader from "urdf-loader";
 import ROSLIB from "roslib";
 
+// >>> IP/puertos centralizados
+import { getStaticBase, getRosbridgeUrl } from "../../ip";
+
 // ---- metadata para el sistema de slides ----
 export const meta = {
   id: "rf-rviz-fiber",
@@ -14,11 +17,9 @@ export const meta = {
   objectiveCode: "ros-slide-rviz-fiber",
 };
 
-// Base de estáticos y WebSocket ROS usando el proxy de CRA
-const STATIC_BASE = "/qcar_static"; // proxifica a 127.0.0.1:7000
-const ROS_WS_URL =
-  (typeof window !== "undefined" && `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/rosbridge`)
-  || "ws://localhost/rosbridge";
+// Bases derivadas del único punto de verdad
+const STATIC_BASE = getStaticBase();        // p.ej. http(s)://HOST:7000
+const ROS_WS_URL  = getRosbridgeUrl();      // p.ej. ws(s)://HOST:9090
 
 // --- Fuerza Z-up en la cámara/controles
 function UseZUp() {
@@ -65,9 +66,10 @@ function RobotModel() {
     if (loadedRef.current) return;
     loadedRef.current = true;
 
-    // Reescribe rutas relativas hacia el server estático proxificado
+    // Reescribe rutas relativas hacia el server estático
     const manager = new THREE.LoadingManager();
     manager.setURLModifier((url) => {
+      // Ej.: /qcar_description/... -> http(s)://HOST:7000/qcar_description/...
       if (url.startsWith("/qcar_description/")) return `${STATIC_BASE}${url}`;
       return url;
     });
@@ -81,7 +83,7 @@ function RobotModel() {
         urdf.traverse((o) => (o.frustumCulled = false));
         setRobot(urdf);
 
-        // === TF en vivo vía rosbridge proxificado ===
+        // === TF en vivo vía rosbridge centralizado ===
         const ros = new ROSLIB.Ros({ url: ROS_WS_URL });
         const tfClient = new ROSLIB.TFClient({
           ros,
@@ -106,7 +108,7 @@ function RobotModel() {
       { packages: { qcar_description: `${STATIC_BASE}/qcar_description` } }
     );
 
-    // Cleanup correcto del efecto
+    // Cleanup
     return () => {
       try { tfRef.current?.dispose?.(); } catch {}
       try { rosRef.current?.close?.(); } catch {}

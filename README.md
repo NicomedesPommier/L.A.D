@@ -409,3 +409,15 @@ aplicación mediante la IP pública o privada de la máquina, sigue estos pasos:
 
 ---
 
+
+La IP utilizada por Django (CORS/CSRF), el frontend de React y el contenedor `qcar_docker` ahora se define en un único archivo
+`config/ip_config.json`:
+
+```json
+{
+  "exposed_ip": "192.168.100.116"
+}
+```
+
+Modifica el valor de `exposed_ip` y reinicia tus servicios para que todos lean la nueva configuración. El endpoint
+`http://<tu-ip>:8000/api/config/network/` expone el mismo JSON para que el frontend lo consuma en caliente.

@@ -77,6 +77,6 @@ def generate_launch_description():
         DeclareLaunchArgument('enable_jsp',       default_value='true'),
         DeclareLaunchArgument('enable_wvs',       default_value='false'),
         DeclareLaunchArgument('wvs_port',         default_value='8080'),
-        DeclareLaunchArgument('enable_turtlesim', default_value='false'),
+        DeclareLaunchArgument('enable_turtlesim', default_value='true'),
         *env, http, rosbridge, tf2web, rsp, jsp, rosapi, wvs, turtlesim
     ])

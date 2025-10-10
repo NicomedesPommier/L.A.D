@@ -1,42 +1,112 @@
 // =============================================================
-// FILE: src/pages/TurtleSimPage.jsx (rewritten)
-// Versión estable: suscripciones fijas, publish seguro y render optimizado
-// Requisitos: tu hook useRoslib ya estable (useCallback/useMemo) o, si no,
-// este archivo usa un mini-hook local `useStableRosSub` que blinda la sub.
+// FILE: src/pages/TurtleSimPage.jsx
+// Autodetección de topics/services (ROS 2) y logs de diagnóstico.
 // =============================================================
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { useRoslib } from "../hooks/useRoslib";
 import "../styles/pages/turtlesim.scss";
 import { useStableRosSub } from "../hooks/useStableRosSub";
+import { TSimHeader } from "../components/tsim/TSimHeader";
+import { TSimCanvas } from "../components/tsim/TSimCanvas";
+import { TSimControls } from "../components/tsim/TSimControls";
+import { TSimSidebar } from "../components/tsim/TSimSidebar";
 
-const ROS_URL = process.env.REACT_APP_ROSBRIDGE_URL || "ws://192.168.100.116:9090";
 const WORLD = 11.0889;
+const GOAL_BOUNDS = { minX: 10.0, minY: 10.0 };
 
-// Objectives
 const OBJ_REACH_GOAL = "TSIM_REACH_GOAL";
 const OBJ_SPAWN_2ND = "TSIM_SPAWN_2ND";
 
-// Goal bounds
-const GOAL_BOUNDS = { minX: 10.0, minY: 10.0 };
+// Tipos ROS 2
+const TYPE_POSE = "turtlesim/msg/Pose";
+const TYPE_TWIST = "geometry_msgs/msg/Twist";
+const TYPE_SRV_SPAWN = "turtlesim/srv/Spawn";
 
-/**
- * Hook local para fijar una suscripción SIN re-suscribirse en cada render.
- * Solo depende de conexión + topic + tipo. Mantiene el último onMessage via ref.
- */
 export default function TurtleSimPage({ objectives = [], onObjectiveHit, onLevelCompleted }) {
-  const { connected, subscribeTopic, advertise, callService } = useRoslib(ROS_URL);
+  const { connected, subscribeTopic, advertise, callService } = useRoslib();
 
-  // Opciones memoizadas para la suscripción (evita deps inestables)
-  const subOpts = useMemo(() => ({ throttle_rate: 50, queue_size: 1 }), []);
+  // ---- Descubrimiento dinámico ----
+  const [poseTopic, setPoseTopic] = useState(null);         // p.ej. "/turtle1/pose" o "/turtlesim/turtle1/pose"
+  const [cmdVelTopic, setCmdVelTopic] = useState(null);     // idem para cmd_vel
+  const [spawnService, setSpawnService] = useState("/spawn"); // "/spawn" o "/turtlesim/spawn", etc.
 
-  // Estado de entidades (minimiza renders usando comparación de cambios)
+  const discoverGraph = useCallback(async () => {
+    if (!connected) return;
+    try {
+      const topicsRes = await callService("/rosapi/topics", "rosapi/Topics", {}); // { topics: string[] }
+      const topics = topicsRes?.topics || [];
+
+      // Intento 1: por tipo exacto
+      const byType = async (topic) => {
+        try {
+          const tt = await callService("/rosapi/topic_type", "rosapi/TopicType", { topic });
+          return tt?.type || "";
+        } catch { return ""; }
+      };
+
+      // Pose
+      let foundPose = null;
+      for (const t of topics) {
+        if (t.endsWith("/pose")) {
+          const ty = await byType(t);
+          if (ty === TYPE_POSE) { foundPose = t; break; }
+        }
+      }
+      // fallback: primer topic con tipo Pose aunque no termine en /pose
+      if (!foundPose) {
+        for (const t of topics) {
+          const ty = await byType(t);
+          if (ty === TYPE_POSE) { foundPose = t; break; }
+        }
+      }
+
+      // cmd_vel
+      let foundCmd = null;
+      for (const t of topics) {
+        if (t.endsWith("/cmd_vel")) {
+          const ty = await byType(t);
+          if (ty === TYPE_TWIST) { foundCmd = t; break; }
+        }
+      }
+      if (!foundCmd) {
+        for (const t of topics) {
+          const ty = await byType(t);
+          if (ty === TYPE_TWIST) { foundCmd = t; break; }
+        }
+      }
+
+      // Services
+      let foundSpawn = "/spawn";
+      try {
+        const svcsRes = await callService("/rosapi/services", "rosapi/Services", {}); // { services: string[] }
+        const services = svcsRes?.services || [];
+        // preferir uno que termine en /spawn
+        const candidates = services.filter((s) => s.endsWith("/spawn"));
+        if (candidates.length > 0) foundSpawn = candidates[0];
+      } catch {}
+
+      setPoseTopic(foundPose);
+      setCmdVelTopic(foundCmd);
+      setSpawnService(foundSpawn);
+
+      // eslint-disable-next-line no-console
+      console.log("[TSIM][discover] pose:", foundPose, "cmd_vel:", foundCmd, "spawn:", foundSpawn);
+    } catch (e) {
+      console.error("[TSIM][discover] error:", e);
+    }
+  }, [connected, callService]);
+
+  useEffect(() => {
+    if (connected) discoverGraph();
+  }, [connected, discoverGraph]);
+
+  // ---- Estado de tortugas ----
   const [turtles, setTurtles] = useState({});
   const turtlesRef = useRef({});
   const setTurtlesSafe = useCallback((updater) => {
     setTurtles((prev) => {
       const next = typeof updater === "function" ? updater(prev) : updater;
-      // Evita renders si no cambia nada a nivel superficial
       if (prev === next) return prev;
       let changed = false;
       if (Object.keys(prev).length !== Object.keys(next).length) changed = true;
@@ -53,28 +123,54 @@ export default function TurtleSimPage({ objectives = [], onObjectiveHit, onLevel
   }, []);
 
   const [active, setActive] = useState("turtle1");
-
   const cmdRef = useRef(null);
   const holdTimerRef = useRef(null);
-  const canvasRef = useRef(null);
-
-  // Log conexión
-  useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log(`[TSIM] ROS ${connected ? "connected" : "disconnected"} @ ${ROS_URL}`);
-  }, [connected]);
-
-  // Anti-duplicados de objetivos
   const reportedRef = useRef({ [OBJ_REACH_GOAL]: false, [OBJ_SPAWN_2ND]: false });
 
-  // === Callbacks estables ===
+  // ---- Logs de conexión ----
+  useEffect(() => {
+    console.log(`[TSIM] ROS ${connected ? "connected" : "disconnected"}`);
+  }, [connected]);
+
+  // ---- Suscripción fija a Pose detectado ----
+  useStableRosSub({
+    connected: connected && !!poseTopic,
+    subscribeTopic,
+    topic: poseTopic || "/turtle1/pose",
+    type: TYPE_POSE,
+    opts: useMemo(() => ({ throttle_rate: 50, queue_size: 1 }), []),
+    onMessage: (msg) => {
+      // el nombre podemos inferirlo del topic
+      const nameGuess = (poseTopic || "/turtle1/pose").split("/").filter(Boolean).slice(-2, -1)[0] || "turtle1";
+      turtlesRef.current = { ...turtlesRef.current, [nameGuess]: { pose: msg } };
+      setTurtlesSafe(turtlesRef.current);
+    },
+  });
+
+  // ---- (Re)advertise cmd_vel detectado ----
+  useEffect(() => {
+    if (!connected || !cmdVelTopic) return undefined;
+    try {
+      cmdRef.current?.unadvertise?.();
+      cmdRef.current = advertise(cmdVelTopic, TYPE_TWIST);
+      console.log("[TSIM] Advertise cmd_vel ->", cmdVelTopic);
+    } catch (e) {
+      console.error("[TSIM] advertise error:", e);
+    }
+    return () => {
+      try { cmdRef.current?.unadvertise?.(); } catch (e) { console.error("[TSIM] unadvertise error:", e); }
+    };
+  }, [connected, cmdVelTopic, advertise]);
+
+  // ---- Helpers publish/hold ----
   const publish = useCallback((lx, az) => {
     if (!cmdRef.current) return;
+    console.log("[ROS][publish]", cmdVelTopic, { lx, az });
     cmdRef.current.publish({
       linear: { x: lx, y: 0, z: 0 },
       angular: { x: 0, y: 0, z: az },
     });
-  }, []);
+  }, [cmdVelTopic]);
 
   const startHold = useCallback((lx, az) => {
     publish(lx, az);
@@ -86,61 +182,18 @@ export default function TurtleSimPage({ objectives = [], onObjectiveHit, onLevel
     clearInterval(holdTimerRef.current);
   }, []);
 
-  const safeHit = useCallback(async (code) => {
-    if (!code) return;
-    if (reportedRef.current[code]) return;
-    try {
-      await onObjectiveHit?.(code);
-      reportedRef.current[code] = true;
-    } catch (err) {
-      console.error("[TSIM] safeHit ERROR ->", code, err);
-    }
-  }, [onObjectiveHit]);
-
-  // Suscripción fija a /turtle1/pose (throttle para no saturar renders)
-  useStableRosSub({
-    connected,
-    subscribeTopic,
-    topic: "/turtle1/pose",
-    type: "turtlesim/Pose",
-    opts: subOpts,
-    onMessage: (msg) => {
-      turtlesRef.current = { ...turtlesRef.current, turtle1: { pose: msg } };
-      setTurtlesSafe(turtlesRef.current);
-    },
-  });
-
-  // (Re)advertise cmd_vel para la activa (solo cuando hay conexión o cambia active)
-  useEffect(() => {
-    if (!connected || !active) return undefined;
-    try {
-      cmdRef.current?.unadvertise?.();
-      cmdRef.current = advertise(`/${active}/cmd_vel`, "geometry_msgs/Twist");
-      // eslint-disable-next-line no-console
-      console.log(`[TSIM] Advertise cmd_vel -> /${active}/cmd_vel`);
-    } catch (e) {
-      console.error("[TSIM] advertise error:", e);
-    }
-    return () => {
-      try {
-        cmdRef.current?.unadvertise?.();
-      } catch (e) {
-        console.error("[TSIM] unadvertise error:", e);
-      }
-    };
-  }, [connected, active, advertise]);
-
-  // Helper para suscribirse a pose por nombre (para spawns puntuales)
-  const subscribePoseOnce = useCallback((name) => {
-    return subscribeTopic(`/${name}/pose`, "turtlesim/Pose", (msg) => {
-      turtlesRef.current = { ...turtlesRef.current, [name]: { pose: msg } };
+  // ---- Suscripción puntual a pose por nombre (para spawns) ----
+  const subscribePoseOnce = useCallback((topic) => {
+    return subscribeTopic(topic, TYPE_POSE, (msg) => {
+      const nameGuess = topic.split("/").filter(Boolean).slice(-2, -1)[0] || "turtle?";
+      turtlesRef.current = { ...turtlesRef.current, [nameGuess]: { pose: msg } };
       setTurtlesSafe(turtlesRef.current);
     }, { throttle_rate: 50, queue_size: 1 });
   }, [subscribeTopic, setTurtlesSafe]);
 
-  // Spawn
+  // ---- Spawn (usa servicio detectado y luego descubre el topic de la nueva tortuga) ----
   const spawnTurtle = useCallback(async (nameOpt) => {
-    if (!connected) return;
+    if (!connected || !spawnService) return;
     const rand = (min, max) => min + Math.random() * (max - min);
     const payload = {
       x: rand(1.0, WORLD - 1.0),
@@ -149,137 +202,29 @@ export default function TurtleSimPage({ objectives = [], onObjectiveHit, onLevel
       name: nameOpt || "",
     };
     try {
-      const res = await callService("/spawn", "turtlesim/Spawn", payload);
+      const res = await callService(spawnService, TYPE_SRV_SPAWN, payload);
       const newName = res?.name || nameOpt || "turtle?";
-      subscribePoseOnce(newName); // sub puntual para esta tortuga
+      console.log("[TSIM] spawn OK ->", newName, "via", spawnService);
+
+      // intenta descubrir su tópico pose real
+      const topicsRes = await callService("/rosapi/topics", "rosapi/Topics", {});
+      const topics = topicsRes?.topics || [];
+      const maybe = topics.find((t) => t.endsWith(`/${newName}/pose`)) ||
+                    topics.find((t) => t.includes(`/${newName}/`) && t.endsWith("/pose")) ||
+                    `/${newName}/pose`;
+      subscribePoseOnce(maybe);
       setActive(newName);
+
       if (!reportedRef.current[OBJ_SPAWN_2ND]) {
-        await safeHit(OBJ_SPAWN_2ND);
+        reportedRef.current[OBJ_SPAWN_2ND] = true;
+        try { awaitMaybe(onObjectiveHit, OBJ_SPAWN_2ND); } catch {}
       }
     } catch (err) {
       console.error("[TSIM] spawn ERROR:", err);
     }
-  }, [connected, callService, subscribePoseOnce, safeHit]);
+  }, [connected, spawnService, callService, subscribePoseOnce, onObjectiveHit]);
 
-  // DPR sync (canvas HiDPI)
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return undefined;
-    const ctx = canvas.getContext("2d");
-    const ro = new ResizeObserver((entries) => {
-      const { width, height } = entries[0].contentRect;
-      const dpr = Math.max(1, window.devicePixelRatio || 1);
-      const bw = Math.round(width * dpr);
-      const bh = Math.round(height * dpr);
-      if (canvas.width !== bw || canvas.height !== bh) {
-        canvas.width = bw; canvas.height = bh;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      }
-    });
-    ro.observe(canvas);
-    return () => ro.disconnect();
-  }, []);
-
-  // Draw loop: usa `turtles` y `active` como fuentes de verdad
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return undefined;
-    const ctx = canvas.getContext("2d");
-
-    let rafId;
-    const draw = () => {
-      const rect = canvas.getBoundingClientRect();
-      const W = rect.width, H = rect.height;
-
-      ctx.clearRect(0, 0, W, H);
-      ctx.fillStyle = "rgba(0,0,0,.55)";
-      ctx.fillRect(0, 0, W, H);
-
-      const scale = Math.min(W, H) / WORLD;
-      const view = WORLD * scale;
-      const ox = (W - view) / 2;
-      const oy = (H - view) / 2;
-      const mapX = (x) => ox + x * scale;
-      const mapY = (y) => oy + (WORLD - y) * scale;
-
-      // grid
-      ctx.strokeStyle = "#1f2a4a";
-      ctx.lineWidth = 1;
-      for (let i = 0; i <= 11; i++) {
-        const g = (i / WORLD) * view;
-        ctx.beginPath(); ctx.moveTo(ox + g, oy); ctx.lineTo(ox + g, oy + view); ctx.stroke();
-        ctx.beginPath(); ctx.moveTo(ox, oy + g); ctx.lineTo(ox + view, oy + g); ctx.stroke();
-      }
-
-      // goal zone
-      const gx0 = mapX(GOAL_BOUNDS.minX);
-      const gy0 = mapY(GOAL_BOUNDS.minY);
-      const gx1 = mapX(WORLD);
-      const gy1 = mapY(WORLD);
-      ctx.fillStyle = "rgba(125,249,255,0.08)";
-      ctx.fillRect(gx0, gy1, gx1 - gx0, gy0 - gy1);
-      ctx.strokeStyle = "rgba(125,249,255,0.35)";
-      ctx.strokeRect(gx0, gy1, gx1 - gx0, gy0 - gy1);
-
-      // turtles
-      Object.entries(turtles).forEach(([name, data]) => {
-        const p = data.pose; if (!p) return;
-        const px = mapX(p.x), py = mapY(p.y);
-        const k = view / 560;
-        const nose = 16 * k, tail = 12 * k;
-
-        ctx.save();
-        ctx.translate(px, py);
-        ctx.rotate(-p.theta);
-        const isActive = name === active;
-        ctx.fillStyle = isActive ? "#7df9ff" : "#10b981";
-        ctx.strokeStyle = isActive ? "#7df9ffAA" : "#10b981AA";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(nose, 0);
-        ctx.lineTo(-tail, 8);
-        ctx.lineTo(-tail * 0.66, 0);
-        ctx.lineTo(-tail, -8);
-        ctx.closePath();
-        ctx.fill(); ctx.stroke();
-        ctx.restore();
-
-        ctx.fillStyle = "#e6f1ff";
-        ctx.font = "12px ui-monospace, monospace";
-        ctx.fillText(name, px + 6, py - 6);
-      });
-
-      rafId = requestAnimationFrame(draw);
-    };
-
-    rafId = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(rafId);
-  }, [turtles, active]);
-
-  // Teclado
-  useEffect(() => {
-    const down = (e) => {
-      if (!connected || e.repeat) return;
-      if (["ArrowUp","KeyW"].includes(e.code)) startHold(1.5, 0);
-      if (["ArrowDown","KeyS"].includes(e.code)) startHold(-1.0, 0);
-      if (["ArrowLeft","KeyA"].includes(e.code)) startHold(0, 2.0);
-      if (["ArrowRight","KeyD"].includes(e.code)) startHold(0, -2.0);
-      if (e.code === "Space") publish(0, 0);
-    };
-    const up = () => stopHold();
-    window.addEventListener("keydown", down);
-    window.addEventListener("keyup", up);
-    return () => {
-      window.removeEventListener("keydown", down);
-      window.removeEventListener("keyup", up);
-      stopHold();
-    };
-  }, [connected, startHold, stopHold, publish]);
-
-  const turtleNames = useMemo(() => Object.keys(turtles).sort(), [turtles]);
-  const activePose = turtles[active]?.pose;
-
-  // Detección de entrada a meta
+  // ---- Detección de entrada a meta ----
   const prevInGoalRef = useRef(false);
   const levelCompletedRef = useRef(false);
   useEffect(() => {
@@ -290,7 +235,8 @@ export default function TurtleSimPage({ objectives = [], onObjectiveHit, onLevel
 
     if (inGoalNow && !wasInGoal) {
       if (!reportedRef.current[OBJ_REACH_GOAL]) {
-        safeHit(OBJ_REACH_GOAL);
+        reportedRef.current[OBJ_REACH_GOAL] = true;
+        try { awaitMaybe(onObjectiveHit, OBJ_REACH_GOAL); } catch {}
       }
       if (!levelCompletedRef.current) {
         levelCompletedRef.current = true;
@@ -298,118 +244,72 @@ export default function TurtleSimPage({ objectives = [], onObjectiveHit, onLevel
       }
     }
     prevInGoalRef.current = inGoalNow;
-  }, [turtles, onLevelCompleted, safeHit]);
+  }, [turtles, onLevelCompleted, onObjectiveHit]);
+
+  const turtleNames = useMemo(() => Object.keys(turtles).sort(), [turtles]);
+  const activePose = turtles[active]?.pose;
 
   return (
     <div className="tsim-screen">
-      <div className={`tsim-status ${connected ? "ok" : "down"}`}>
-        {connected ? "Connected" : "Disconnected"}
-      </div>
-
-      <header className="tsim-header">
-        <h1 className="tsim-title">Turtlesim</h1>
-        <div className="tsim-header__spacer" />
-        <ul className="tsim-objectives">
-          {objectives.map((o) => {
-            const desc = o.description || o.Description || o.code;
-            const done = o.user_progress?.achieved;
-            return (
-              <li key={o.code} className={done ? "done" : ""} title={o.code}>
-                <span className="dot" />
-                <span className="desc">{desc}</span>
-                {done && <span className="check">✔</span>}
-              </li>
-            );
-          })}
-        </ul>
-        <div className="tsim-header__active">
-          {activePose ? (
-            <span>
-              {active} · x:{activePose.x.toFixed(2)} y:{activePose.y.toFixed(2)} θ:{activePose.theta.toFixed(2)}
-            </span>
-          ) : "…"}
-        </div>
-      </header>
+      <TSimHeader
+        connected={connected}
+        objectives={objectives}
+        active={active}
+        activePose={activePose}
+      />
 
       <main className="tsim-layout">
         <section className="tsim-canvasCard">
-          <div className="tsim-canvasWrap">
-            <canvas ref={canvasRef} className="tsim-canvas" />
+          <TSimCanvas
+            turtles={turtles}
+            active={active}
+            worldSize={WORLD}
+            goalBounds={GOAL_BOUNDS}
+          />
+          {/* Indicadores de descubrimiento */}
+          <div style={{marginTop:8, fontSize:12, color:"#9fb3c8"}}>
+            <div>poseTopic: <code>{String(poseTopic || "detecting…")}</code></div>
+            <div>cmdVelTopic: <code>{String(cmdVelTopic || "detecting…")}</code></div>
+            <div>spawnService: <code>{String(spawnService || "detecting…")}</code></div>
           </div>
         </section>
 
-        <aside className="tsim-panel">
-          <div className="tsim-row">
-            <label className="tsim-label">Control</label>
-            <div className="tsim-controls">
-              <Btn text="↑" onDown={() => startHold(1.5, 0)} onUp={stopHold} disabled={!connected} />
-              <Btn text="↓" onDown={() => startHold(-1.0, 0)} onUp={stopHold} disabled={!connected} />
-              <Btn text="←" onDown={() => startHold(0, 2.0)} onUp={stopHold} disabled={!connected} />
-              <Btn text="→" onDown={() => startHold(0, -2.0)} onUp={stopHold} disabled={!connected} />
-              <Btn text="■" onClick={() => publish(0, 0)} disabled={!connected} />
-            </div>
-            <div className="tsim-hint">W/A/S/D o flechas · Space para frenar</div>
-          </div>
-
-          <div className="tsim-row tsim-row--inline">
-            <label className="tsim-label">Active</label>
-            <select
-              className="tsim-select"
-              value={active}
-              onChange={(e) => setActive(e.target.value)}
-              disabled={!connected || turtleNames.length === 0}
-            >
-              {[active, ...turtleNames.filter((n) => n !== active)].map((n) => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="tsim-row tsim-row--inline">
-            <label className="tsim-label">Spawn</label>
-            <div className="tsim-spawn">
-              <input className="tsim-input" placeholder="optional name" id="tname" />
-              <button
-                className="btn"
-                disabled={!connected}
-                onClick={() => {
-                  const el = document.getElementById("tname");
-                  const name = el.value.trim();
-                  spawnTurtle(name || undefined);
-                  el.value = "";
-                }}
-              >+ Add</button>
-            </div>
-          </div>
-        </aside>
+        <section className="tsim-controlsPanel">
+          <TSimControls
+            connected={connected && !!cmdVelTopic}
+            startHold={startHold}
+            stopHold={stopHold}
+            publish={publish}
+          />
+          <TSimSidebar
+            connected={connected}
+            active={active}
+            setActive={setActive}
+            turtleNames={turtleNames}
+            spawnTurtle={spawnTurtle}
+          />
+        </section>
       </main>
     </div>
   );
 }
 
-function Btn({ text, onDown, onUp, onClick, disabled }) {
-  return (
-    <button
-      className="tsim-btn"
-      disabled={disabled}
-      onMouseDown={onDown}
-      onMouseUp={onUp}
-      onMouseLeave={onUp}
-      onTouchStart={(e) => { e.preventDefault(); onDown?.(); }}
-      onTouchEnd={(e) => { e.preventDefault(); onUp?.(); }}
-      onClick={onClick}
-    >
-      {text}
-    </button>
-  );
+function awaitMaybe(fn, ...args) {
+  try {
+    const r = fn?.(...args);
+    if (r && typeof r.then === "function") return r.catch(() => {});
+    return r;
+  } catch {}
 }
 
 TurtleSimPage.propTypes = {
+  objectives: PropTypes.array,
   onObjectiveHit: PropTypes.func,
   onLevelCompleted: PropTypes.func,
 };
 
 TurtleSimPage.defaultProps = {
+  objectives: [],
   onObjectiveHit: undefined,
   onLevelCompleted: undefined,
 };
