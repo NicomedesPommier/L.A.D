@@ -1,0 +1,209 @@
+/* src/levels/rosbasic/slides/WorkspaceAndBuildSlide.scss */
+
+:root {
+  --glass: rgba(255, 255, 255, 0.06);
+  --border: rgba(255, 255, 255, 0.2);
+  --text: #e6f1ff;
+}
+
+.slide-wrap {
+  display: grid;
+  gap: 0.75rem;
+
+  h2 {
+    margin: 0 0 0.25rem;
+  }
+}
+
+.section-card {
+  background: var(--glass, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.2));
+  border-radius: 12px;
+  padding: 0.6rem 0.75rem;
+  display: grid;
+  gap: 0.75rem;
+
+  &--right {
+    grid-template-columns: 1fr minmax(360px, 40%);
+  }
+
+  &__title {
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+  }
+}
+
+/* Layout superior: árbol + detalle */
+.ws-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 40%) 1fr;
+  gap: 0.75rem;
+}
+
+.tree {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.2));
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  overflow: auto;
+
+  &__pre {
+    margin: 0;
+    line-height: 1.45;
+  }
+
+  &__item {
+    cursor: pointer;
+    user-select: none;
+    padding: 2px 4px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    transition: background 0.12s ease, border-color 0.12s ease;
+
+    &:hover {
+      background: rgba(125, 249, 255, 0.06);
+      border-color: rgba(125, 249, 255, 0.2);
+    }
+
+    &.is-selected {
+      background: rgba(125, 249, 255, 0.12);
+      border-color: rgba(125, 249, 255, 0.35);
+    }
+  }
+
+  &__spacer {
+    height: 6px;
+  }
+}
+
+.detail {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.2));
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  display: grid;
+  gap: 0.5rem;
+
+  &__label {
+    opacity: 0.9;
+    font-weight: 700;
+  }
+
+  &__desc {
+    opacity: 0.95;
+    white-space: pre-wrap;
+  }
+}
+
+/* Franja inferior: colcon build */
+.colcon-grid {
+  display: grid;
+  grid-template-columns: 1fr minmax(380px, 42%);
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.colcon-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  line-height: 1.55;
+}
+
+.colcon-sublist {
+  margin-top: 0.25rem;
+}
+
+.code-inline {
+  margin: 0.35rem 0 0;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 0.4rem 0.6rem;
+  display: inline-block;
+}
+
+.cmd-card {
+  display: grid;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border, rgba(255, 255, 255, 0.2));
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+
+  &__title {
+    font-weight: 700;
+  }
+
+  &__code {
+    margin: 0;
+    padding: 0.6rem 0.75rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.35);
+    color: var(--text, #e6f1ff);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  &__hint {
+    opacity: 0.85;
+  }
+}
+
+/* Opcional: si no tienes una clase .btn global, podrías activar esto
+.btn {
+  appearance: none;
+  border: 1px solid var(--border);
+  background: var(--glass);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 0.4rem 0.7rem;
+  cursor: pointer;
+}
+.btn:hover { filter: brightness(1.08); }
+*/
+/* --- Fix layout: Comandos útiles dentro de .section-card--right --- */
+.section-card--right {
+  /* asegura buena alineación vertical y separación */
+  align-items: start;
+  column-gap: 0.75rem;
+}
+
+/* Aplana la grilla interna para que sus hijos pasen a ser ítems
+   de la grilla padre (.section-card--right) sin cambiar el JSX */
+.section-card--right .colcon-grid {
+  display: contents;
+}
+
+/* Coloca explícitamente cada hijo en su columna */
+.section-card--right .colcon-list {
+  grid-column: 1;     /* izquierda */
+}
+
+.section-card--right .cmd-card {
+  grid-column: 2;     /* derecha */
+  justify-self: end;  /* pegada a la derecha, dentro de su columna */
+  max-width: 560px;   /* evita que “flote” o se desborde */
+}
+
+/* Evita overflow del bloque de código si es muy ancho */
+.cmd-card__code {
+  overflow: auto;
+}
+
+/* Responsivo: apilar en una columna cuando no hay ancho */
+@media (max-width: 900px) {
+  .section-card--right {
+    grid-template-columns: 1fr;
+  }
+  .section-card--right .cmd-card {
+    grid-column: 1;
+    justify-self: stretch;
+    max-width: none;
+  }
+}
