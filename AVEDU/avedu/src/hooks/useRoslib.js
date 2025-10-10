@@ -1,10 +1,11 @@
 // src/hooks/useRoslib.js
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ROSLIB from "roslib";
+import { ROS_WS_URL } from "../config";
 
-const isValidWsUrl = (u) => /^wss?:\/\/[^:\/\s]+(:\d+)?(\/.*)?$/i.test(String(u || ""));
+const isValidWsUrl = (u) => /^wss?:\/\/[^\s]+$/i.test(String(u || ""));
 
-export function useRoslib(url = "ws://localhost:9090") {
+export function useRoslib(url = ROS_WS_URL) {
   const rosRef = useRef(null);
   const [connected, setConnected] = useState(false);
 

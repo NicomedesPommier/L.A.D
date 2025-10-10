@@ -17,7 +17,7 @@ SECRET_KEY = 'django-insecure-!px)fft@n1i7)6@2&-l@ekdxz4qz$m4u8*^f23e%-d#cm=cvqn
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.100.116']
 
 
 # Application definition
@@ -48,13 +48,14 @@ REST_FRAMEWORK = {
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
+    
     
 ]
 CORS_ALLOW_ALL_ORIGINS = True
@@ -107,9 +108,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-CORS_ALLOWED_ORIGINS = ["http://localhost:3000"]
-CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]
+CORS_ALLOWED_ORIGINS = ["http://localhost:3000", "http://192.168.100.116:3000"]
+CSRF_TRUSTED_ORIGINS = ["http://localhost:3000", "http://192.168.100.116:3000"]
 
+CORS_ALLOW_CREDENTIALS = True
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
