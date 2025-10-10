@@ -86,6 +86,7 @@ body {
   opacity:.85; letter-spacing:.35em;
 }
 
+
 /* --------- Menú / Botones --------- */
 .menu { display:grid; gap:.75rem; width:min(420px,92vw); margin-top:.6rem; }
 
@@ -117,8 +118,6 @@ body {
   position:absolute; left:0; right:0; bottom:.6rem;
   text-align:center; font-size:.8rem; opacity:.5; letter-spacing:.2em;
 }
-
-/* --------- Login Card --------- */
 .login { width: min(420px, 92vw); }
 .login__panel {
   background: rgba(0,0,0,.35);
@@ -141,3 +140,27 @@ body {
 }
 .login__field input:focus { border-color: var(--neon2); box-shadow: 0 0 0 3px rgba(255,92,244,.2); }
 .login__error { color:#ff9292; font-size:.9rem; margin:.25rem 0 .5rem; }
+.login__success { color:#7df9ff; font-size:.9rem; margin:.25rem 0 .5rem; }
+.auth-toggle {
+  display:flex;
+  justify-content:center;
+  gap:0.75rem;
+  margin-bottom:1rem;
+}
+.auth-toggle__btn {
+  background:transparent;
+  border:2px solid transparent;
+  color:var(--text);
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  padding:.35rem 1rem;
+  border-radius:999px;
+  cursor:pointer;
+  transition:all .15s ease;
+}
+.auth-toggle__btn.is-active,
+.auth-toggle__btn:hover {
+  border-color:var(--neon2);
+  background:rgba(255,92,244,.15);
+  box-shadow:0 0 18px rgba(255,92,244,.25);
+}

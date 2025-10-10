@@ -9,12 +9,17 @@ import "../styles/pages/_home.scss";
 
 export default function Home() {
   const navigate = useNavigate();
-  const { user, login, logout, loading } = useAuth();
+  const { user, login, logout, register, loading } = useAuth();
   const startRef = useRef(null);
+  const [mode, setMode] = useState("login");
 
-  useEffect(() => { startRef.current?.focus(); }, [user]);
+  useEffect(() => {
+    if (user) startRef.current?.focus();
+  }, [user]);
 
-  function handleStart() { navigate("/Learn"); }
+  function handleStart() {
+    navigate("/Learn");
+  }
 
   return (
     <div className="screen">
@@ -30,12 +35,51 @@ export default function Home() {
           <small>{user ? "Learn Autonomous Driving" : "LOGIN TO L.A.D"}</small>
         </h1>
 
-        {!user ? <LoginCard onLogin={login} loading={loading} /> : (
+        {!user ? (
+          <>
+            <div className="auth-toggle" role="tablist" aria-label="Auth selector">
+              <button
+                type="button"
+                className={`auth-toggle__btn ${mode === "login" ? "is-active" : ""}`}
+                onClick={() => setMode("login")}
+                aria-pressed={mode === "login"}
+              >
+                Iniciar sesión
+              </button>
+              <button
+                type="button"
+                className={`auth-toggle__btn ${mode === "register" ? "is-active" : ""}`}
+                onClick={() => setMode("register")}
+                aria-pressed={mode === "register"}
+              >
+                Crear cuenta
+              </button>
+            </div>
+
+            {mode === "login" ? (
+              <LoginCard onLogin={login} loading={loading} />
+            ) : (
+              <RegisterCard
+                onRegister={register}
+                loading={loading}
+                onSwitch={() => setMode("login")}
+              />
+            )}
+          </>
+        ) : (
           <div className="menu">
-            <button ref={startRef} onClick={handleStart} className="start">▶ START Learning</button>
-            <button className="btn ghost" disabled>MISIONS</button>
-            <button className="btn ghost" disabled>RESEARCH</button>
-            <button className="btn" onClick={logout}>Logout</button>
+            <button ref={startRef} onClick={handleStart} className="start">
+              ▶ START Learning
+            </button>
+            <button className="btn ghost" disabled>
+              MISIONS
+            </button>
+            <button className="btn ghost" disabled>
+              RESEARCH
+            </button>
+            <button className="btn" onClick={logout}>
+              Logout
+            </button>
           </div>
         )}
 
@@ -77,14 +121,111 @@ function LoginCard({ onLogin, loading }) {
         <div className="login__title">LOGIN</div>
         <label className="login__field">
           <span>Username</span>
-          <input value={username} onChange={e => setUsername(e.target.value)} placeholder="player1" required />
+          <input
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="player1"
+            required
+          />
         </label>
         <label className="login__field">
           <span>Password</span>
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            required
+          />
         </label>
         {error && <div className="login__error">{error}</div>}
-        <button type="submit" className="start" disabled={loading}>{loading ? "Connecting…" : "▶ START"}</button>
+        <button type="submit" className="start" disabled={loading}>
+          {loading ? "Connecting…" : "▶ START"}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function RegisterCard({ onRegister, loading, onSwitch }) {
+  const [form, setForm] = useState({ username: "", password: "", confirm: "", email: "" });
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  function updateField(field, value) {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async function submit(e) {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    if (form.password !== form.confirm) {
+      setError("Las contraseñas no coinciden");
+      return;
+    }
+    try {
+      const ok = await onRegister({
+        username: form.username,
+        password: form.password,
+        email: form.email || undefined,
+      });
+      if (ok) {
+        setSuccess("Cuenta creada. Iniciando sesión…");
+        setTimeout(() => onSwitch?.(), 1500);
+      }
+    } catch (err) {
+      setError(err.message || "No se pudo crear la cuenta");
+    }
+  }
+
+  return (
+    <form className="login" onSubmit={submit}>
+      <div className="login__panel">
+        <div className="login__title">Crear cuenta</div>
+        <label className="login__field">
+          <span>Username</span>
+          <input
+            value={form.username}
+            onChange={(e) => updateField("username", e.target.value)}
+            placeholder="student01"
+            required
+          />
+        </label>
+        <label className="login__field">
+          <span>Email (opcional)</span>
+          <input
+            type="email"
+            value={form.email}
+            onChange={(e) => updateField("email", e.target.value)}
+            placeholder="you@example.com"
+          />
+        </label>
+        <label className="login__field">
+          <span>Password</span>
+          <input
+            type="password"
+            value={form.password}
+            onChange={(e) => updateField("password", e.target.value)}
+            placeholder="••••••••"
+            required
+          />
+        </label>
+        <label className="login__field">
+          <span>Confirmar password</span>
+          <input
+            type="password"
+            value={form.confirm}
+            onChange={(e) => updateField("confirm", e.target.value)}
+            placeholder="••••••••"
+            required
+          />
+        </label>
+        {error && <div className="login__error">{error}</div>}
+        {success && <div className="login__success">{success}</div>}
+        <button type="submit" className="start" disabled={loading}>
+          {loading ? "Creando…" : "▶ Crear cuenta"}
+        </button>
       </div>
     </form>
   );

@@ -40,15 +40,25 @@ function mergeProgressIntoUnits(units, levelsProgress) {
   });
 }
 
+function isUnitCompleted(unit) {
+  if (!unit?.levels?.length) return false;
+  return unit.levels.every((l) => l?.user_progress?.completed);
+}
+
 export default function Learn() {
   const [units, setUnits] = useState([]);
   const [loadingUnits, setLoadingUnits] = useState(true);
+  const [unitsError, setUnitsError] = useState("");
+
+  const [levelsProgress, setLevelsProgress] = useState([]);
   const [, setLoadingProgress] = useState(false);
 
   const { unitSlug } = useParams();
 
   // Sidebar open/close (persisted)
-  const [open, setOpen] = useState(() => localStorage.getItem("learn.sidebar.open") === "false" ? false : true);
+  const [open, setOpen] = useState(() =>
+    localStorage.getItem("learn.sidebar.open") === "false" ? false : true
+  );
   const toggle = useCallback(() => {
     setOpen((prev) => {
       const next = !prev;
@@ -56,7 +66,10 @@ export default function Learn() {
       return next;
     });
   }, []);
-  const layoutClass = useMemo(() => `learn-layout${open ? "" : " learn-layout--collapsed"}`, [open]);
+  const layoutClass = useMemo(
+    () => `learn-layout${open ? "" : " learn-layout--collapsed"}`,
+    [open]
+  );
 
   // Abort refs
   const abortUnitsRef = useRef(null);
@@ -70,15 +83,26 @@ export default function Learn() {
 
     try {
       setLoadingUnits(true);
-      if (DEBUG) console.log("[Learn] GET", `${API_BASE}/units/`);
-      const res = await apiFetch(`${API_BASE}/units/`, { signal: ac.signal });
+      setUnitsError("");
+      const url = `${API_BASE}/units/`;
+      if (DEBUG) console.log("[Learn] GET", url);
+      const res = await apiFetch(url, { signal: ac.signal });
       if (DEBUG) console.log("[Learn] GET /units status:", res.status);
+
+      if (!res.ok) {
+        const msg = `No se pudieron cargar las unidades (${res.status})`;
+        setUnitsError(msg);
+      }
       const data = res.ok ? await res.json() : [];
       if (DEBUG) {
-        console.log("[Learn] units summary:",
-          (Array.isArray(data) ? data : []).map(u => ({
+        console.log(
+          "[Learn] units summary:",
+          (Array.isArray(data) ? data : []).map((u) => ({
             unit: u.slug,
-            levels: (u.levels || []).map(l => ({ slug: l.slug, objectives: (l.objectives || []).length }))
+            levels: (u.levels || []).map((l) => ({
+              slug: l.slug,
+              objectives: (l.objectives || []).length,
+            })),
           }))
         );
       }
@@ -87,13 +111,12 @@ export default function Learn() {
       if (e?.name !== "AbortError") {
         console.error("[Learn] loadUnits error:", e);
         setUnits([]);
+        setUnitsError("Error de red al cargar las unidades");
       }
     } finally {
       setLoadingUnits(false);
     }
   }, []);
-
-  useEffect(() => { loadUnits(); }, [loadUnits]);
 
   // --------- FETCH PROGRESS ----------
   const fetchProgress = useCallback(async () => {
@@ -109,132 +132,99 @@ export default function Learn() {
       if (DEBUG) console.log("[Learn] GET /levels/progress/me/ status:", res.status);
       const data = res.ok ? await res.json() : [];
       if (DEBUG) {
-        console.log("[Learn] levelsProgress summary:",
-          (Array.isArray(data) ? data : []).map(l => ({
+        console.log(
+          "[Learn] levelsProgress summary:",
+          (Array.isArray(data) ? data : []).map((l) => ({
             slug: l.slug,
-            objectives: (l.objectives || []).map(o => ({ code: o.code, achieved: o.user_progress?.achieved })),
-            completed: l.user_progress?.completed,
-            score: l.user_progress?.score
+            completed: !!l?.user_progress?.completed,
+            objectives: (l?.objectives || []).length,
           }))
         );
       }
-      return Array.isArray(data) ? data : [];
+      setLevelsProgress(Array.isArray(data) ? data : []);
     } catch (e) {
       if (e?.name !== "AbortError") {
         console.error("[Learn] fetchProgress error:", e);
+        setLevelsProgress([]);
       }
-      return [];
     } finally {
       setLoadingProgress(false);
     }
   }, []);
 
   const reloadProgress = useCallback(async () => {
-    try {
-      const levelsProgress = await fetchProgress();
-      setUnits((prev) => mergeProgressIntoUnits(prev, levelsProgress));
-    } catch (e) {
-      console.error("[Learn] reloadProgress error:", e);
-    }
-  }, [fetchProgress]);
+    await Promise.all([loadUnits(), fetchProgress()]);
+  }, [loadUnits, fetchProgress]);
 
-  // --------- ACTIVE UNIT ----------
-  const activeUnit = useMemo(() => {
-    const want = (unitSlug || "").toLowerCase();
-    const found = units.find((u) => (u.slug || "").toLowerCase() === want) || null;
-    if (DEBUG) console.log("[Learn] activeUnit want:", want, "found:", found?.slug);
-    return found;
-  }, [units, unitSlug]);
+  useEffect(() => {
+    loadUnits();
+    fetchProgress();
+    return () => {
+      abortUnitsRef.current?.abort?.();
+      abortProgressRef.current?.abort?.();
+    };
+  }, [loadUnits, fetchProgress]);
 
-  const isUnitCompleted = useCallback((u) => {
-    const levels = Array.isArray(u?.levels) ? u.levels : [];
-    return levels.length > 0 && levels.every((l) => !!l.user_progress?.completed);
-  }, []);
+  const mergedUnits = useMemo(
+    () => mergeProgressIntoUnits(units, levelsProgress),
+    [units, levelsProgress]
+  );
 
-  if (DEBUG) {
-    console.log("[Learn] render snapshot units:",
-      units.map(u => ({
-        unit: u.slug,
-        levels: (u.levels || []).map(l => ({
-          slug: l.slug,
-          completed: l.user_progress?.completed,
-          obj: (l.objectives || []).map(o => ({ code: o.code, done: o.user_progress?.achieved }))
-        }))
-      }))
-    );
-  }
+  const currentUnit = useMemo(
+    () => mergedUnits.find((u) => u.slug === unitSlug),
+    [mergedUnits, unitSlug]
+  );
 
-  // --------- RENDER ----------
   return (
-  <ProgressProvider>
-    <div className={layoutClass}>
-      {/* Toggle flotante SIEMPRE montado.
-          Tu SCSS ya lo oculta cuando no está colapsado. */}
-      <button
-        className="learn-toggle learn-toggle--floating"
-        onClick={toggle}
-        aria-label={open ? "Ocultar barra lateral" : "Mostrar barra lateral"}
-        title={open ? "Ocultar" : "Mostrar"}
-      >
-        {open ? "⟨" : "⟩"}
-      </button>
+    <ProgressProvider>
+      <div className={layoutClass}>
+        {/* Sidebar */}
+        <aside className="learn-sidebar">
+          <button className="toggle" onClick={toggle} aria-label="Toggle sidebar" />
+          {currentUnit ? (
+            <ul>
+              {currentUnit.levels?.map((l) => (
+                <li key={l.slug}>
+                  <NavLink
+                    to={`/learn/${currentUnit.slug}/${l.slug}`}
+                    className={({ isActive }) => (isActive ? "active" : undefined)}
+                  >
+                    {l.title}
+                  </NavLink>
+                  {l.user_progress?.completed && <span className="badge">✔</span>}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <ul>
+              {mergedUnits.map((u) => (
+                <li key={u.slug}>
+                  <NavLink
+                    to={`/learn/${u.slug}`}
+                    className={({ isActive }) => (isActive ? "active" : undefined)}
+                  >
+                    {u.title}
+                  </NavLink>
+                  {isUnitCompleted(u) && <span className="badge">✔</span>}
+                </li>
+              ))}
+            </ul>
+          )}
+        </aside>
 
-      {/* Sidebar */}
-      <aside className="learn-sidebar">
-        <div className="learn-sidebar__header">
-          <h2>{activeUnit ? activeUnit.title : "Units"}</h2>
-          {/* Puedes dejar este botón interno también */}
-          <button
-            className="learn-toggle"
-            onClick={toggle}
-            title={open ? "Hide" : "Show"}
-          >
-            {open ? "⟨" : "⟩"}
-          </button>
-        </div>
-
-        {loadingUnits ? (
-          <div className="learn-sidebar__loading">Cargando…</div>
-        ) : activeUnit ? (
-          <ul>
-            {(activeUnit.levels || []).map((l) => (
-              <li key={l.slug}>
-                <NavLink
-                  to={`/learn/${activeUnit.slug}/${l.slug}`}
-                  className={({ isActive }) => (isActive ? "active" : undefined)}
-                >
-                  {l.title}
-                </NavLink>
-                {l.user_progress?.completed && <span className="badge">✔</span>}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <ul>
-            {units.map((u) => (
-              <li key={u.slug}>
-                <NavLink
-                  to={`/learn/${u.slug}`}
-                  className={({ isActive }) => (isActive ? "active" : undefined)}
-                >
-                  {u.title}
-                </NavLink>
-                {isUnitCompleted(u) && <span className="badge">✔</span>}
-              </li>
-            ))}
-          </ul>
-        )}
-      </aside>
-
-      {/* Stage */}
-      <main className="learn-stage">
-        {loadingUnits || units.length === 0 ? (
-          <div className="loading">Cargando unidades…</div>
-        ) : (
-          <Outlet context={{ units, reloadProgress }} />
-        )}
-      </main>
-    </div>
-  </ProgressProvider>
-)
+        {/* Stage */}
+        <main className="learn-stage">
+          {loadingUnits ? (
+            <div className="loading">Cargando unidades…</div>
+          ) : unitsError ? (
+            <div className="error">{unitsError}</div>
+          ) : mergedUnits.length === 0 ? (
+            <div className="loading">No hay unidades disponibles.</div>
+          ) : (
+            <Outlet context={{ units: mergedUnits, reloadProgress }} />
+          )}
+        </main>
+      </div>
+    </ProgressProvider>
+  );
 }
