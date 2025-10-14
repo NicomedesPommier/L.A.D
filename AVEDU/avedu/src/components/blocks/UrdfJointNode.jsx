@@ -133,7 +133,18 @@ export default function UrdfJointNode({ id, data }) {
       </div>
 
       {/* salida: emite el objeto joint por 'out' */}
-      <Handle type="source" position={Position.Right} id="out" />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="out"
+        style={{
+          width: "18px",
+          height: "18px",
+          background: "#2196f3",
+          border: "3px solid #fff"
+        }}
+        title="Connect to Assembly or Robot node"
+      />
     </div>
   );
 }

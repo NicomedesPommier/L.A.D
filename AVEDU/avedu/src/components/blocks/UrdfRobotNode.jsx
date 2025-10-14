@@ -41,12 +41,60 @@ export default function UrdfRobotNode({ id, data }) {
         </details>
       </div>
 
-      {/* entran links y joints */}
-      <Handle type="target" position={Position.Left} id="links" style={{ top: "30%" }} />
-      <Handle type="target" position={Position.Left} id="joints" style={{ top: "70%" }} />
+      {/* entran links, joints, y assemblies */}
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="links"
+        style={{
+          top: "25%",
+          width: "18px",
+          height: "18px",
+          background: "#4caf50",
+          border: "3px solid #fff"
+        }}
+        title="Connect Link nodes here"
+      />
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="joints"
+        style={{
+          top: "50%",
+          width: "18px",
+          height: "18px",
+          background: "#2196f3",
+          border: "3px solid #fff"
+        }}
+        title="Connect Joint nodes here"
+      />
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="assemblies"
+        style={{
+          top: "75%",
+          width: "18px",
+          height: "18px",
+          background: "#9c27b0",
+          border: "3px solid #fff"
+        }}
+        title="Connect Assembly nodes here"
+      />
 
       {/* sale xml */}
-      <Handle type="source" position={Position.Right} id="xml" />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="xml"
+        style={{
+          width: "20px",
+          height: "20px",
+          background: "#ff5722",
+          border: "3px solid #fff"
+        }}
+        title="Connect to XML Preview or Viewer"
+      />
     </div>
   );
 }

@@ -11,7 +11,7 @@ import {
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 
-import { nodeTypes, paletteUrdf, defaultDataFor } from "../../components/blocks";
+import { nodeTypes, paletteUrdf, paletteUrdfV2, defaultDataFor } from "../../components/blocks";
 import {
   computeUrdfXml,
   syncUrdfDerived,
@@ -141,6 +141,27 @@ function Inner({ onObjectiveHit }) {
       {/* FRANJA 1: Paleta */}
       <div className="rfp-palette">
         <div className="rfp-palette__inner">
+          <div style={{ marginBottom: ".5rem", fontSize: "0.85em", fontWeight: "bold", color: "#666" }}>
+            URDF V2 (Modular - Recommended)
+          </div>
+          {paletteUrdfV2.map((p) => (
+            <div
+              key={p.type}
+              className="rf-chip"
+              draggable
+              title="Arrastra al lienzo"
+              onDragStart={(e) => {
+                e.dataTransfer.setData("application/rf-node", p.type);
+                e.dataTransfer.effectAllowed = "move";
+              }}
+            >
+              {p.label}
+            </div>
+          ))}
+
+          <div style={{ marginTop: "1rem", marginBottom: ".5rem", fontSize: "0.85em", fontWeight: "bold", color: "#666" }}>
+            URDF Classic (Legacy)
+          </div>
           {paletteUrdf.map((p) => (
             <div
               key={p.type}
@@ -190,9 +211,12 @@ function Inner({ onObjectiveHit }) {
           <button className="btn" onClick={markDone}>Marcar logrado</button>
         </div>
         <div className="rfp-terminal__hint">
-          Conecta varios <b>URDF Link</b> al puerto <code>links</code> del <b>URDF Robot</b> y
-          varios <b>URDF Joint</b> al puerto <code>joints</code>. Luego conecta la salida <code>xml</code> a
-          <b> URDF XML</b> y/o <b>URDF Viewer</b>.
+          <strong>V2 Workflow (Modular):</strong> Create Inertial, Visual, and Collision nodes → Connect to Link V2 →
+          Connect Links and Joints to Assembly (optional) → Connect to Robot → Connect to XML Preview or Viewer.
+          <br /><br />
+          <strong>Classic Workflow:</strong> Connect <b>URDF Link</b> nodes to <code>links</code> port and
+          <b>URDF Joint</b> nodes to <code>joints</code> port of <b>URDF Robot</b>.
+          Then connect <code>xml</code> output to <b>URDF XML</b> or <b>URDF Viewer</b>.
         </div>
       </div>
     </div>

@@ -1,8 +1,10 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, ExecuteProcess, SetEnvironmentVariable
+from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription, SetEnvironmentVariable
 from launch.conditions import IfCondition
-from launch.substitutions import LaunchConfiguration
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
+from launch_ros.substitutions import FindPackageShare
 from ament_index_python.packages import get_package_share_directory
 import os
 
@@ -14,6 +16,8 @@ def generate_launch_description():
     enable_wvs      = LaunchConfiguration('enable_wvs')
     wvs_port        = LaunchConfiguration('wvs_port')
     enable_turtle   = LaunchConfiguration('enable_turtlesim')
+    enable_gazebo   = LaunchConfiguration('enable_gazebo')
+    gazebo_world    = LaunchConfiguration('gazebo_world')
 
     # Rutas desde qcar_description instalado
     qcar_share  = get_package_share_directory('qcar_description')
@@ -70,6 +74,38 @@ def generate_launch_description():
         output='screen', condition=IfCondition(enable_turtle)
     )
 
+    # Gazebo simulation (headless mode for Docker)
+    pkg_gazebo_ros = FindPackageShare('gazebo_ros')
+    pkg_qcar_description = FindPackageShare('qcar_description')
+
+    # Launch Gazebo server with required plugins
+    gzserver = ExecuteProcess(
+        cmd=[
+            'gzserver',
+            '--verbose',
+            '-s', 'libgazebo_ros_init.so',
+            '-s', 'libgazebo_ros_factory.so'
+        ],
+        output='screen',
+        condition=IfCondition(enable_gazebo)
+    )
+
+    # Spawn QCar in Gazebo (with longer timeout for Gazebo initialization)
+    spawn_qcar = Node(
+        package='gazebo_ros',
+        executable='spawn_entity.py',
+        arguments=[
+            '-entity', 'qcar',
+            '-file', urdf_file,
+            '-x', '0.0',
+            '-y', '0.0',
+            '-z', '0.1',
+            '-timeout', '120.0'  # Increase timeout to 120 seconds for model database
+        ],
+        output='screen',
+        condition=IfCondition(enable_gazebo)
+    )
+
     return LaunchDescription([
         DeclareLaunchArgument('cors_allow_origin', default_value='http://localhost:8000'),
         DeclareLaunchArgument('static_port',      default_value='7000'),
@@ -78,5 +114,7 @@ def generate_launch_description():
         DeclareLaunchArgument('enable_wvs',       default_value='false'),
         DeclareLaunchArgument('wvs_port',         default_value='8080'),
         DeclareLaunchArgument('enable_turtlesim', default_value='true'),
-        *env, http, rosbridge, tf2web, rsp, jsp, rosapi, wvs, turtlesim
+        DeclareLaunchArgument('enable_gazebo',    default_value='false'),
+        DeclareLaunchArgument('gazebo_world',     default_value=''),
+        *env, http, rosbridge, tf2web, rsp, jsp, rosapi, wvs, turtlesim, gzserver, spawn_qcar
     ])

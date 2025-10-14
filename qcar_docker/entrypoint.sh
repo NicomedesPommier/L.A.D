@@ -12,6 +12,8 @@ source /ros2_ws/install/setup.bash
 : "${ENABLE_JSP:=1}"
 : "${ENABLE_WVS:=0}"
 : "${ENABLE_TURTLESIM:=0}"
+: "${ENABLE_GAZEBO:=0}"
+: "${GAZEBO_WORLD:=}"
 # Args opcionales para xacro (ej: "use_camera:=true")
 : "${XACRO_ARGS:=}"
 
@@ -59,9 +61,43 @@ grep -q "<robot" "${TMP_URDF}" || { echo "[ERROR] URDF inválido"; exit 1; }
 cp -f "${TMP_URDF}" "${URDF_DIR}/robot_runtime.urdf"
 echo "[entrypoint] URDF HTTP: http://localhost:${STATIC_PORT}/qcar_description/urdf/robot_runtime.urdf"
 
+# Start Xvfb for headless Gazebo if enabled
+if [ "${ENABLE_GAZEBO}" = "1" ]; then
+  echo "[entrypoint] Starting Xvfb for headless Gazebo..."
+  Xvfb :99 -screen 0 1024x768x24 &
+  export DISPLAY=:99
+
+  # Set Gazebo model path so it can find meshes
+  export GAZEBO_MODEL_PATH="${QCAR_DESC_SHARE}:${GAZEBO_MODEL_PATH}"
+  echo "[entrypoint] GAZEBO_MODEL_PATH: ${GAZEBO_MODEL_PATH}"
+
+  # Disable model database to speed up initialization
+  export GAZEBO_MODEL_DATABASE_URI=""
+  echo "[entrypoint] Disabled Gazebo model database for faster startup"
+
+  sleep 2
+fi
+
+# Build launch arguments
+LAUNCH_ARGS=(
+  "cors_allow_origin:=${CORS_ALLOW_ORIGIN}"
+  "static_port:=${STATIC_PORT}"
+  "enable_rosapi:=$([ "${ENABLE_ROSAPI}" = "1" ] && echo true || echo false)"
+  "enable_jsp:=$([ "${ENABLE_JSP}" = "1" ] && echo true || echo false)"
+  "enable_gazebo:=$([ "${ENABLE_GAZEBO}" = "1" ] && echo true || echo false)"
+)
+
+# Only add gazebo_world if it has a value
+if [ -n "${GAZEBO_WORLD}" ]; then
+  LAUNCH_ARGS+=("gazebo_world:=${GAZEBO_WORLD}")
+fi
+
+# Add remaining flags
+LAUNCH_ARGS+=(
+  "enable_wvs:=$([ "${ENABLE_WVS}" = "1" ] && echo true || echo false)"
+  "wvs_port:=${WVS_PORT}"
+  "enable_turtlesim:=$([ "${ENABLE_TURTLESIM}" = "1" ] && echo true || echo false)"
+)
+
 # Lanza todo con flags (Opción 1)
-exec ros2 launch qcar_bringup web_viz.launch.py \
-  cors_allow_origin:="${CORS_ALLOW_ORIGIN}" \
-  static_port:="${STATIC_PORT}" \
-  enable_rosapi:="$([ "${ENABLE_ROSAPI}" = "1" ] && echo true || echo false)" \
-  enable_jsp:="$([ "${ENABLE_JSP}" = "1" ] && echo true || echo false)" \
+exec ros2 launch qcar_bringup web_viz.launch.py "${LAUNCH_ARGS[@]}"

@@ -7,12 +7,20 @@ import StringNode from "./StringNode";
 import ListItemsNode from "./ListItemsNode";
 import ConvertToCodeNode from "./ConvertToCodeNode";
 
-// --- URDF blocks (nuevos) ---
+// --- URDF blocks (original) ---
 import UrdfLinkNode from "./UrdfLinkNode";
 import UrdfJointNode from "./UrdfJointNode";
 import UrdfRobotNode from "./UrdfRobotNode";
 import UrdfPreviewNode from "./UrdfPreviewNode";
 import UrdfViewerNode from "./UrdfViewerNode";
+
+// --- URDF blocks V2 (modular/improved) ---
+import UrdfLinkNodeV2 from "./UrdfLinkNodeV2";
+import UrdfInertialNode from "./UrdfInertialNode";
+import UrdfVisualNode from "./UrdfVisualNode";
+import UrdfCollisionNode from "./UrdfCollisionNode";
+import UrdfAssemblyNode from "./UrdfAssemblyNode";
+import UrdfXmlPreviewNode from "./UrdfXmlPreviewNode";
 
 export const nodeTypes = {
   // existentes
@@ -23,12 +31,20 @@ export const nodeTypes = {
   listDeps: ListItemsNode,
   toCode: ConvertToCodeNode,
 
-  // nuevos URDF
+  // URDF (original)
   urdfLink: UrdfLinkNode,
   urdfJoint: UrdfJointNode,
   urdfRobot: UrdfRobotNode,
   urdfPreview: UrdfPreviewNode,
   urdfViewer: UrdfViewerNode,
+
+  // URDF V2 (modular/improved)
+  urdfLinkV2: UrdfLinkNodeV2,
+  urdfInertial: UrdfInertialNode,
+  urdfVisual: UrdfVisualNode,
+  urdfCollision: UrdfCollisionNode,
+  urdfAssembly: UrdfAssemblyNode,
+  urdfXmlPreview: UrdfXmlPreviewNode,
 };
 
 // Paleta existente: run
@@ -50,13 +66,31 @@ export const paletteCreate = [
   { type: "toCode", label: "Convert2Code" },
 ];
 
-// Nueva paleta: URDF
+// Paleta URDF (Original - all-in-one)
 export const paletteUrdf = [
   { type: "urdfLink",    label: "URDF Link" },
   { type: "urdfJoint",   label: "URDF Joint" },
   { type: "urdfRobot",   label: "URDF Robot" },
   { type: "urdfPreview", label: "URDF XML" },
   { type: "urdfViewer",  label: "URDF Viewer" },
+];
+
+// Paleta URDF V2 (Modular - Blender-style)
+export const paletteUrdfV2 = [
+  // Component nodes
+  { type: "urdfInertial",  label: "⚖️ Inertial" },
+  { type: "urdfVisual",    label: "👁️ Visual" },
+  { type: "urdfCollision", label: "🛡️ Collision" },
+
+  // Structure nodes
+  { type: "urdfLinkV2",    label: "🔗 Link" },
+  { type: "urdfJoint",     label: "🔩 Joint" },
+  { type: "urdfAssembly",  label: "🔧 Assembly" },
+
+  // Output nodes
+  { type: "urdfRobot",      label: "🤖 Robot" },
+  { type: "urdfXmlPreview", label: "📄 XML Preview" },
+  { type: "urdfViewer",     label: "👀 3D Viewer" },
 ];
 
 export function defaultDataFor(typeOrPreset) {
@@ -127,6 +161,46 @@ export function defaultDataFor(typeOrPreset) {
 
   if (typeOrPreset === "urdfViewer")
     return { id: "", xml: "" };
+
+  // -------- URDF V2 (modular) --------
+  if (typeOrPreset === "urdfInertial")
+    return {
+      mass: 1.0,
+      inertia: { ixx: 0.01, iyy: 0.01, izz: 0.01, ixy: 0, ixz: 0, iyz: 0 },
+      origin: { xyz: [0, 0, 0], rpy: [0, 0, 0] }
+    };
+
+  if (typeOrPreset === "urdfVisual")
+    return {
+      geometry: { type: "box", size: [1, 1, 1] },
+      origin: { xyz: [0, 0, 0], rpy: [0, 0, 0] },
+      material: { name: "", color: [0.5, 0.5, 0.5, 1] }
+    };
+
+  if (typeOrPreset === "urdfCollision")
+    return {
+      geometry: { type: "box", size: [1, 1, 1] },
+      origin: { xyz: [0, 0, 0], rpy: [0, 0, 0] }
+    };
+
+  if (typeOrPreset === "urdfLinkV2")
+    return {
+      name: "",
+      inertial: null,
+      visuals: [],
+      collisions: []
+    };
+
+  if (typeOrPreset === "urdfAssembly")
+    return {
+      name: "",
+      description: "",
+      links: [],
+      joints: []
+    };
+
+  if (typeOrPreset === "urdfXmlPreview")
+    return { xml: "" };
 
   return {};
 }

@@ -108,22 +108,112 @@ export function robotToXml(name, links = [], joints = []) {
 
 /* ---------- Derivadas desde el grafo de React Flow ---------- */
 
+/**
+ * Resuelve los componentes conectados a un nodo LinkV2
+ * (inertial, visual[], collision[])
+ */
+export function resolveLinkV2Components(linkNode, nodes, edges) {
+  const linkId = linkNode.id;
+  const incoming = edges.filter((e) => e.target === linkId);
+
+  // Inertial (single)
+  const inertialEdge = incoming.find((e) => e.targetHandle === "inertial");
+  const inertialNode = inertialEdge ? nodes.find((n) => n.id === inertialEdge.source) : null;
+  const inertial = inertialNode?.data || null;
+
+  // Visuals (multiple)
+  const visualEdges = incoming.filter((e) => e.targetHandle === "visual");
+  const visuals = visualEdges
+    .map((e) => nodes.find((n) => n.id === e.source)?.data)
+    .filter(Boolean);
+
+  // Collisions (multiple)
+  const collisionEdges = incoming.filter((e) => e.targetHandle === "collision");
+  const collisions = collisionEdges
+    .map((e) => nodes.find((n) => n.id === e.source)?.data)
+    .filter(Boolean);
+
+  return {
+    name: linkNode.data?.name || "",
+    inertial,
+    visuals,
+    collisions
+  };
+}
+
+/**
+ * Resuelve los componentes de un nodo Assembly
+ * (links[], joints[])
+ */
+export function resolveAssemblyComponents(assemblyNode, nodes, edges) {
+  const assemblyId = assemblyNode.id;
+  const incoming = edges.filter((e) => e.target === assemblyId);
+
+  // Links
+  const linkEdges = incoming.filter((e) => e.targetHandle === "links");
+  const links = linkEdges
+    .map((e) => {
+      const linkNode = nodes.find((n) => n.id === e.source);
+      if (!linkNode) return null;
+      // If it's a V2 link, resolve its components
+      if (linkNode.type === "urdfLinkV2") {
+        return resolveLinkV2Components(linkNode, nodes, edges);
+      }
+      // Otherwise use its data directly
+      return linkNode.data;
+    })
+    .filter(Boolean);
+
+  // Joints
+  const jointEdges = incoming.filter((e) => e.targetHandle === "joints");
+  const joints = jointEdges
+    .map((e) => nodes.find((n) => n.id === e.source)?.data)
+    .filter(Boolean);
+
+  return { links, joints };
+}
+
 /** Extrae del grafo los datos conectados al nodo urdfRobot */
 export function computeRobotData(nodes, edges) {
   const robot = nodes.find((n) => n.type === "urdfRobot");
   if (!robot) return { robotId: null, links: [], joints: [], name: "my_robot" };
 
   const incoming = edges.filter((e) => e.target === robot.id);
-  const fromPort = (id) =>
-    incoming
-      .filter((e) => e.targetHandle === id)
-      .map((e) => nodes.find((n) => n.id === e.source)?.data)
-      .filter(Boolean);
 
-  const links = fromPort("links").map((d) => ({ ...d }));
-  const joints = fromPort("joints").map((d) => ({ ...d }));
+  let allLinks = [];
+  let allJoints = [];
+
+  // Direct links (from urdfLink or urdfLinkV2)
+  const directLinkEdges = incoming.filter((e) => e.targetHandle === "links");
+  directLinkEdges.forEach((e) => {
+    const linkNode = nodes.find((n) => n.id === e.source);
+    if (!linkNode) return;
+    if (linkNode.type === "urdfLinkV2") {
+      allLinks.push(resolveLinkV2Components(linkNode, nodes, edges));
+    } else {
+      allLinks.push(linkNode.data);
+    }
+  });
+
+  // Direct joints
+  const directJointEdges = incoming.filter((e) => e.targetHandle === "joints");
+  directJointEdges.forEach((e) => {
+    const jointNode = nodes.find((n) => n.id === e.source);
+    if (jointNode?.data) allJoints.push(jointNode.data);
+  });
+
+  // Assemblies (groups of links and joints)
+  const assemblyEdges = incoming.filter((e) => e.targetHandle === "assemblies");
+  assemblyEdges.forEach((e) => {
+    const assemblyNode = nodes.find((n) => n.id === e.source);
+    if (!assemblyNode) return;
+    const { links, joints } = resolveAssemblyComponents(assemblyNode, nodes, edges);
+    allLinks.push(...links);
+    allJoints.push(...joints);
+  });
+
   const name = robot.data?.name || "my_robot";
-  return { robotId: robot.id, links, joints, name };
+  return { robotId: robot.id, links: allLinks, joints: allJoints, name };
 }
 
 /** Genera el XML del robot actualmente conectado */
@@ -137,9 +227,8 @@ export function computeUrdfXml(nodes, edges) {
 /**
  * Sincroniza el XML generado hacia:
  *  - el propio nodo urdfRobot (data.xml)
- *  - cualquier urdfPreview / urdfViewer en el grafo
+ *  - cualquier urdfPreview / urdfXmlPreview / urdfViewer en el grafo
  */
-// urdf-helpers.js
 export function syncUrdfDerived(nodes, edges, setNodes) {
   const deriv = computeUrdfXml(nodes, edges);
   if (!deriv.robotId) return;
@@ -149,7 +238,10 @@ export function syncUrdfDerived(nodes, edges, setNodes) {
     let changed = false;
     const next = prev.map(n => {
       const curr = n.data || {};
-      const isTarget = (n.id === robotId) || (n.type === 'urdfPreview') || (n.type === 'urdfViewer');
+      const isTarget = (n.id === robotId) ||
+                       (n.type === 'urdfPreview') ||
+                       (n.type === 'urdfXmlPreview') ||
+                       (n.type === 'urdfViewer');
       if (!isTarget) return n;
 
       if (curr.xml === xml) return n; // nada cambia
@@ -157,7 +249,6 @@ export function syncUrdfDerived(nodes, edges, setNodes) {
       return { ...n, data: { ...curr, xml } };
     });
 
-    
     return changed ? next : prev;
   });
 }

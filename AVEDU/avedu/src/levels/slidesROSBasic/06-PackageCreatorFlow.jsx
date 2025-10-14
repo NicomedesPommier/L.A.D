@@ -248,6 +248,9 @@ function Inner({ onObjectiveHit }) {
       {/* FRANJA 1: PALETTE */}
       <div className="rfp-palette">
         <div className="rfp-palette__inner">
+          <div style={{ marginBottom: ".5rem", fontSize: "0.85em", fontWeight: "bold", color: "#666" }}>
+            Package Creator Blocks
+          </div>
           {paletteCreate.map((p) => (
             <div
               key={p.type}
@@ -301,7 +304,10 @@ function Inner({ onObjectiveHit }) {
           </button>
         </div>
         <div className="rfp-terminal__hint">
-          La terminal refleja exactamente el contenido del bloque <b>Convert2Code</b>.
+          <strong>Workflow:</strong> Drag <b>Package Name</b>, <b>Node Name</b>, and <b>Dependencies</b> blocks
+          and connect them to <b>Create Package</b> block. Then connect to <b>Convert2Code</b> to see the final command.
+          <br />
+          The terminal reflects exactly the content of the <b>Convert2Code</b> block.
         </div>
       </div>
     </div>

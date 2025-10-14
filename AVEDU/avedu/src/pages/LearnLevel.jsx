@@ -9,7 +9,9 @@ import { API_BASE } from "../config";
 //------------------Levels
 import TurtleSimPage from "../levels/Turtlesim";
 import RosBasic from "../levels/RosBasic";
-import MeshDebugPage from "../levels/rviz"
+import MeshDebugPage from "../levels/rviz";
+import VehicleDynamics from "../levels/VehicleDynamics";
+import GazeboSim from "../levels/GazeboSim";
 
 const DEBUG = true;
 
@@ -17,7 +19,8 @@ const REGISTRY = Object.freeze({
   turtlesim: TurtleSimPage,
   "ros-basic": RosBasic,
   "rviz": MeshDebugPage,
-
+  "vehicle-dynamics": VehicleDynamics,
+  "gazebo-sim": GazeboSim,
 });
 
 export default function LearnLevel() {
