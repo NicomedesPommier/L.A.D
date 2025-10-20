@@ -42,22 +42,69 @@ L.A.D (Learn Autonomous Driving) is a **complete educational platform** designed
 ### Prerequisites
 
 - **Node.js** >= 18.x and npm >= 9.x
-- **Python** >= 3.10
+- **Python** >= 3.10 or 3.11
 - **Docker** >= 24.x (for ROS 2 simulations)
 - **Git**
 
-### Installation (Development Mode)
+### Installation
 
-**Option 1: Automatic Start (Windows)**
+L.A.D includes automated installers that handle all setup steps for you!
+
+**Windows Installation**
 ```cmd
-# Navigate to the repository
+# Clone the repository
+git clone <repository-url>
 cd L.A.D
 
-# Double-click to start all services
+# Run the installer (double-click or run from command line)
+installer.bat
+```
+
+**Linux/Mac Installation**
+```bash
+# Clone the repository
+git clone <repository-url>
+cd L.A.D
+
+# Make installer executable and run
+chmod +x installer.sh
+./installer.sh
+```
+
+**What the installer does:**
+- ✅ Checks all prerequisites (Python, Node.js, Docker)
+- ✅ Creates Python virtual environment
+- ✅ Installs all backend dependencies from `requirements.txt`
+- ✅ Runs database migrations
+- ✅ Loads sample content (Units, Levels, Objectives)
+- ✅ Creates admin superuser account
+- ✅ Installs all frontend npm packages
+- ✅ Builds ROS 2 Docker images
+
+### Starting the Platform
+
+After installation, start all services with one command:
+
+**Windows**
+```cmd
 scripts\start-all.bat
 ```
 
-**Option 2: Manual Start (All Platforms)**
+**Linux/Mac**
+```bash
+./scripts/start-all.sh
+```
+
+This will:
+- Auto-detect your network IP
+- Update all configurations
+- Start Django backend (port 8000)
+- Start ROS 2 Docker (ports 9090, 7000)
+- Start React frontend (port 3000)
+
+### Manual Installation (Advanced)
+
+If you prefer manual control or the installer fails:
 
 1️⃣ **Clone the repository**
 ```bash
@@ -65,39 +112,38 @@ git clone <repository-url>
 cd L.A.D
 ```
 
-2️⃣ **Start the Frontend**
-```bash
-cd AVEDU/avedu
-npm install
-npm start
-```
-✅ Accessible at `http://localhost:3000` and on your network IP (auto-detected)
-
-3️⃣ **Start the Backend** *(in a new terminal)*
+2️⃣ **Install Backend**
 ```bash
 cd LAD/lad
 python -m venv ../.venv
 source ../.venv/bin/activate  # On Windows: ..\.venv\Scripts\activate
 pip install -r requirements.txt
 python manage.py migrate
+python manage.py loaddata fixtures/initial_data.json
 python manage.py createsuperuser
-python manage.py runserver 0.0.0.0:8000
 ```
-✅ API accessible at `http://localhost:8000/api`
 
-4️⃣ **Start ROS 2 Docker** *(in a new terminal)*
+3️⃣ **Install Frontend**
+```bash
+cd AVEDU/avedu
+npm install
+```
+
+4️⃣ **Build ROS Docker**
 ```bash
 cd qcar_docker
-docker compose up
+docker compose build
 ```
-✅ ROS Bridge accessible at `ws://localhost:9090`
+
+5️⃣ **Start all services** (use scripts/start-all.bat or start-all.sh)
 
 ### First Steps After Installation
 
 1. **Access the application**: Open `http://localhost:3000`
-2. **Login**: Use the superuser credentials you created
-3. **Create content**: Visit `http://localhost:8000/admin` to add Units and Levels
-4. **Test ROS**: Check that ROS widgets connect to the simulation
+2. **Login**: Use the superuser credentials you created during installation
+3. **Explore content**: Sample units and levels are already loaded
+4. **Django admin**: Visit `http://localhost:8000/admin` to manage content
+5. **Test ROS**: Navigate to ROS levels to verify simulation connectivity
 
 ---
 
@@ -288,8 +334,10 @@ L.A.D/
 │   │   ├── settings.py       # Django configuration
 │   │   ├── urls.py           # URL routing
 │   │   └── ip_config.py      # Network config loader
+│   ├── fixtures/             # Database fixtures
+│   │   └── initial_data.json # Sample units, levels, objectives
 │   ├── manage.py
-│   └── requirements.txt
+│   └── requirements.txt      # Python dependencies
 │
 ├── qcar_docker/              # ROS 2 Docker Environment
 │   ├── qcar/rosws/src/       # ROS packages
@@ -308,6 +356,8 @@ L.A.D/
 │   ├── stop-all.bat/.sh      # Stop all services
 │   └── set-ip.js             # Manual IP configuration
 │
+├── installer.bat             # Windows automated installer
+├── installer.sh              # Linux/Mac automated installer
 ├── CLAUDE.md                 # AI assistant context guide
 └── README.md                 # This file
 ```
