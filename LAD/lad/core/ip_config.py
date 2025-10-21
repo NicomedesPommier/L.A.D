@@ -15,7 +15,7 @@ _CONFIG_FILE = _BASE_DIR / "config" / "ip_config.json"
 
 # Defaults seguros
 _DEFAULTS: Dict[str, Any] = {
-    "exposed_ip": "192.168.100.116",
+    "exposed_ip": "10.53.113.187",
     "frontend_port": 3000,
     "backend_port": 8000,
     "rosbridge_port": 9090,
