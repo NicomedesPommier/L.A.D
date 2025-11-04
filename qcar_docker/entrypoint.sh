@@ -14,13 +14,18 @@ source /ros2_ws/install/setup.bash
 : "${ENABLE_TURTLESIM:=0}"
 : "${ENABLE_GAZEBO:=0}"
 : "${GAZEBO_WORLD:=}"
+: "${ENABLE_DUMMY_CAMERAS:=0}"
+: "${ENABLE_UNITY_TCP:=0}"
+: "${UNITY_TCP_PORT:=10000}"
 # Args opcionales para xacro (ej: "use_camera:=true")
 : "${XACRO_ARGS:=}"
 
-if [ "${USER_DEFINED_CORS_FLAG}" != "x" ]; then
-  CONFIG_PATH="${IP_CONFIG_PATH:-}"
-  if [ -n "${CONFIG_PATH}" ] && [ -r "${CONFIG_PATH}" ]; then
-    EXPOSED_IP="$(python3 - "${CONFIG_PATH}" <<'PY'
+# Extract EXPOSED_IP from config file (always, for use in URDF generation)
+CONFIG_PATH="${IP_CONFIG_PATH:-}"
+echo "[entrypoint] CONFIG_PATH=${CONFIG_PATH}"
+if [ -n "${CONFIG_PATH}" ] && [ -r "${CONFIG_PATH}" ]; then
+  echo "[entrypoint] Reading IP from ${CONFIG_PATH}"
+  EXPOSED_IP="$(python3 - "${CONFIG_PATH}" <<'PY'
 import json
 import sys
 
@@ -36,9 +41,15 @@ if ip:
     print(ip)
 PY
 )"
-    if [ -n "${EXPOSED_IP}" ]; then
-      CORS_ALLOW_ORIGIN="http://${EXPOSED_IP}:3000"
-    fi
+  echo "[entrypoint] EXPOSED_IP=${EXPOSED_IP}"
+else
+  echo "[entrypoint] Config file not found or not readable"
+fi
+
+# Update CORS_ALLOW_ORIGIN if not user-defined
+if [ "${USER_DEFINED_CORS_FLAG}" != "x" ]; then
+  if [ -n "${EXPOSED_IP}" ]; then
+    CORS_ALLOW_ORIGIN="http://${EXPOSED_IP}:3000"
   fi
 fi
 
@@ -54,23 +65,48 @@ echo "[entrypoint] XACRO: ${MAIN_XACRO}"
 [ -f "${MAIN_XACRO}" ] || { echo "[ERROR] No existe ${MAIN_XACRO}"; exit 1; }
 
 mkdir -p /tmp/robot_model
+
+# Generate base URDF from xacro
 xacro "${MAIN_XACRO}" ${XACRO_ARGS} > "${TMP_URDF}"
 grep -q "<robot" "${TMP_URDF}" || { echo "[ERROR] URDF inválido"; exit 1; }
 
-# Convert package:// URIs to file:// URIs for Gazebo compatibility
-# This is needed because Gazebo Classic doesn't resolve package:// URIs the same way as ROS 2
-sed -i "s|package://qcar_description/|file://${QCAR_DESC_SHARE}/|g" "${TMP_URDF}"
-echo "[entrypoint] Converted package:// URIs to file:// URIs for Gazebo"
+# Determine the base URL for mesh resources
+# If we have an exposed IP, use it; otherwise fall back to localhost
+MESH_BASE_URL="http://localhost:${STATIC_PORT}/qcar_description/"
+if [ -n "${EXPOSED_IP}" ]; then
+  MESH_BASE_URL="http://${EXPOSED_IP}:${STATIC_PORT}/qcar_description/"
+fi
 
-# Copia al package para servir por HTTP
-cp -f "${TMP_URDF}" "${URDF_DIR}/robot_runtime.urdf"
-echo "[entrypoint] URDF HTTP: http://localhost:${STATIC_PORT}/qcar_description/urdf/robot_runtime.urdf"
+# Create web-specific URDF with relative paths for browser visualization
+# The URDF is served at: http://IP:PORT/qcar_description/urdf/robot_runtime.urdf
+# Meshes are served at: http://IP:PORT/qcar_description/meshes/
+# So we use relative path: ../meshes/ (go up from urdf/ to qcar_description/, then into meshes/)
+WEB_URDF="${URDF_DIR}/robot_runtime.urdf"
+cp "${TMP_URDF}" "${WEB_URDF}"
+sed -i "s|package://qcar_description/meshes/|../meshes/|g" "${WEB_URDF}"
+echo "[entrypoint] Created web URDF with relative mesh paths (../meshes/)"
+echo "[entrypoint] Web URDF: ${MESH_BASE_URL}urdf/robot_runtime.urdf"
 
-# Start Xvfb for headless Gazebo if enabled
+# Create Gazebo-specific URDF with file:// URIs
+GAZEBO_URDF="${URDF_DIR}/robot_gazebo.urdf"
+cp "${TMP_URDF}" "${GAZEBO_URDF}"
+sed -i "s|package://qcar_description/|file://${QCAR_DESC_SHARE}/|g" "${GAZEBO_URDF}"
+echo "[entrypoint] Created Gazebo URDF with file:// mesh URLs"
+
+# Also keep the tmp version with package:// URIs for robot_state_publisher
+# robot_state_publisher can resolve package:// URIs correctly
+echo "[entrypoint] Keeping package:// URIs in ${TMP_URDF} for robot_state_publisher"
+
+# Configure Gazebo with GPU acceleration
 if [ "${ENABLE_GAZEBO}" = "1" ]; then
-  echo "[entrypoint] Starting Xvfb for headless Gazebo..."
-  Xvfb :99 -screen 0 1024x768x24 &
+  echo "[entrypoint] Configuring Gazebo with GPU acceleration..."
+
+  # Start Xvfb for OpenGL context (GPU will still be used for rendering)
+  # Xvfb is needed just for X11 display, actual rendering happens on GPU
+  echo "[entrypoint] Starting Xvfb (for OpenGL context, GPU handles rendering)..."
+  Xvfb :99 -screen 0 1024x768x24 +extension GLX +render -noreset &
   export DISPLAY=:99
+  sleep 2
 
   # Set Gazebo model path so it can find meshes
   export GAZEBO_MODEL_PATH="${QCAR_DESC_SHARE}:${GAZEBO_MODEL_PATH}"
@@ -80,7 +116,16 @@ if [ "${ENABLE_GAZEBO}" = "1" ]; then
   export GAZEBO_MODEL_DATABASE_URI=""
   echo "[entrypoint] Disabled Gazebo model database for faster startup"
 
-  sleep 2
+  echo "[entrypoint] Using NVIDIA GPU for rendering ($(nvidia-smi --query-gpu=name --format=csv,noheader || echo 'GPU detection failed'))"
+fi
+
+# Start ROS-TCP-Endpoint for Unity if enabled
+if [ "${ENABLE_UNITY_TCP}" = "1" ]; then
+  echo "[entrypoint] Starting ROS-TCP-Endpoint for Unity on port ${UNITY_TCP_PORT}..."
+  ros2 run ros_tcp_endpoint default_server_endpoint --ros-args \
+    -p ROS_IP:=0.0.0.0 \
+    -p ROS_TCP_PORT:=${UNITY_TCP_PORT} &
+  echo "[entrypoint] ROS-TCP-Endpoint started in background"
 fi
 
 # Build launch arguments
@@ -102,6 +147,7 @@ LAUNCH_ARGS+=(
   "enable_wvs:=$([ "${ENABLE_WVS}" = "1" ] && echo true || echo false)"
   "wvs_port:=${WVS_PORT}"
   "enable_turtlesim:=$([ "${ENABLE_TURTLESIM}" = "1" ] && echo true || echo false)"
+  "enable_dummy_cameras:=$([ "${ENABLE_DUMMY_CAMERAS}" = "1" ] && echo true || echo false)"
 )
 
 # Lanza todo con flags (Opción 1)

@@ -20,6 +20,7 @@ setup(
     entry_points={
         'console_scripts': [
             'compressed_republisher = qcar_bringup.compressed_republisher:main',
+            'dummy_camera_publisher = qcar_bringup.dummy_camera_publisher:main',
         ],
     },
 )

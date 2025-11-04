@@ -18,11 +18,13 @@ def generate_launch_description():
     enable_turtle   = LaunchConfiguration('enable_turtlesim')
     enable_gazebo   = LaunchConfiguration('enable_gazebo')
     gazebo_world    = LaunchConfiguration('gazebo_world')
+    enable_dummy_cameras = LaunchConfiguration('enable_dummy_cameras')
 
     # Rutas desde qcar_description instalado
     qcar_share  = get_package_share_directory('qcar_description')
     static_root = os.path.dirname(qcar_share)  # .../install/.../share
     urdf_file   = os.path.join(qcar_share, 'urdf', 'robot_runtime.urdf')
+    gazebo_urdf = os.path.join(qcar_share, 'urdf', 'robot_gazebo.urdf')
 
     env = [
         SetEnvironmentVariable(name='CORS_ALLOW_ORIGIN', value=cors_origin),
@@ -67,6 +69,17 @@ def generate_launch_description():
         package='web_video_server', executable='web_video_server', name='web_video_server',
         output='screen', arguments=['--port', wvs_port],
         condition=IfCondition(enable_wvs)
+    )
+
+    # Dummy camera publisher - provides test images when Gazebo cameras are unavailable
+    # (e.g., in headless Docker without GPU/OpenGL support)
+    # Set ENABLE_DUMMY_CAMERAS=1 in docker-compose.yml to enable
+    dummy_camera_publisher = Node(
+        package='qcar_bringup',
+        executable='dummy_camera_publisher',
+        name='dummy_camera_publisher',
+        output='screen',
+        condition=IfCondition(enable_dummy_cameras)
     )
 
     # Compressed image republisher for better streaming performance over rosbridge
@@ -114,12 +127,13 @@ def generate_launch_description():
     )
 
     # Spawn QCar in Gazebo (with longer timeout for Gazebo initialization)
+    # Use gazebo_urdf (with file:// URLs) instead of urdf_file (with http:// URLs)
     spawn_qcar = Node(
         package='gazebo_ros',
         executable='spawn_entity.py',
         arguments=[
             '-entity', 'qcar',
-            '-file', urdf_file,
+            '-file', gazebo_urdf,  # Use Gazebo-specific URDF with file:// mesh URLs
             '-x', '0.0',
             '-y', '0.0',
             '-z', '0.1',
@@ -139,5 +153,6 @@ def generate_launch_description():
         DeclareLaunchArgument('enable_turtlesim', default_value='true'),
         DeclareLaunchArgument('enable_gazebo',    default_value='false'),
         DeclareLaunchArgument('gazebo_world',     default_value=''),
-        *env, http, rosbridge, tf2web, rsp, jsp, rosapi, wvs, compressed_republisher, turtlesim, gzserver, spawn_qcar
+        DeclareLaunchArgument('enable_dummy_cameras', default_value='false'),
+        *env, http, rosbridge, tf2web, rsp, jsp, rosapi, wvs, dummy_camera_publisher, compressed_republisher, turtlesim, gzserver, spawn_qcar
     ])

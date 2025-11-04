@@ -39,6 +39,9 @@ RUN mkdir -p src
 WORKDIR /ros2_ws/src
 RUN git clone https://github.com/Wisc-HCI/tf2_web_republisher_py.git
 
+# 1.5) Clonar ROS-TCP-Endpoint para Unity (ROS 2 branch)
+RUN git clone -b main-ros2 https://github.com/Unity-Technologies/ROS-TCP-Endpoint.git ros_tcp_endpoint
+
 # 2) Copiar tus paquetes (qcar_bringup, qcar_description) al mismo /ros2_ws/src
 #    OJO: copia el CONTENIDO de qcar/rosws/src/ dentro de /ros2_ws/src/
 COPY qcar/rosws/src/ /ros2_ws/src/
@@ -65,7 +68,7 @@ COPY http_cors.py /http_cors.py
 COPY entrypoint.sh /entrypoint.sh
 RUN dos2unix /entrypoint.sh && chmod +x /entrypoint.sh
 
-EXPOSE 9090 8080 7000
+EXPOSE 9090 8080 7000 10000
 
 # Usa tini como init para señales/zombies y ejecuta el entrypoint
 ENTRYPOINT ["/usr/bin/tini","--","/entrypoint.sh"]

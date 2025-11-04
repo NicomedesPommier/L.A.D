@@ -1,6 +1,7 @@
 // src/levels/GazeboSim.jsx
 import React, { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import GazeboSimulator from "../components/gazebo/GazeboSimulator";
+import ClientSideGazeboSimulator from "../components/gazebo/ClientSideGazeboSimulator";
 
 /** =========================================
  *  Auto-import of intro slides
@@ -42,6 +43,7 @@ export default function GazeboSim({ onObjectiveHit, onLevelCompleted }) {
   const total = slides.length;
   const [idx, setIdx] = useState(0);
   const [showSimulator, setShowSimulator] = useState(false);
+  const [useClientSide, setUseClientSide] = useState(true); // Toggle between client-side and streaming
 
   const go = useCallback(
     (delta) => setIdx((i) => Math.max(0, Math.min(total - 1, i + delta))),
@@ -81,20 +83,47 @@ export default function GazeboSim({ onObjectiveHit, onLevelCompleted }) {
           border: "1px solid var(--border)",
           borderRadius: "12px"
         }}>
-          <h2 style={{ margin: 0, fontSize: "1.2rem" }}>Gazebo Vehicle Simulation</h2>
-          <button
-            className="btn"
-            onClick={() => setShowSimulator(false)}
-            style={{ padding: ".5rem 1rem" }}
-          >
-            ← Back to Slides
-          </button>
+          <h2 style={{ margin: 0, fontSize: "1.2rem" }}>
+            Gazebo Vehicle Simulation
+            <span style={{
+              fontSize: ".8rem",
+              marginLeft: ".75rem",
+              opacity: 0.7,
+              fontWeight: "normal"
+            }}>
+              ({useClientSide ? "Client-Side Rendering" : "ROS Streaming"})
+            </span>
+          </h2>
+          <div style={{ display: "flex", gap: ".5rem", alignItems: "center" }}>
+            <button
+              className="btn"
+              onClick={() => setUseClientSide(!useClientSide)}
+              style={{ padding: ".5rem 1rem", fontSize: ".85rem" }}
+              title="Toggle between client-side 3D rendering and ROS camera streaming"
+            >
+              {useClientSide ? "📹 Switch to Streaming" : "🎮 Switch to 3D"}
+            </button>
+            <button
+              className="btn"
+              onClick={() => setShowSimulator(false)}
+              style={{ padding: ".5rem 1rem" }}
+            >
+              ← Back to Slides
+            </button>
+          </div>
         </div>
 
-        <GazeboSimulator
-          onObjectiveHit={onObjectiveHit}
-          onLevelCompleted={onLevelCompleted}
-        />
+        {useClientSide ? (
+          <ClientSideGazeboSimulator
+            onObjectiveHit={onObjectiveHit}
+            onLevelCompleted={onLevelCompleted}
+          />
+        ) : (
+          <GazeboSimulator
+            onObjectiveHit={onObjectiveHit}
+            onLevelCompleted={onLevelCompleted}
+          />
+        )}
       </div>
     );
   }
