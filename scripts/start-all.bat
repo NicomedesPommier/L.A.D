@@ -58,10 +58,18 @@ cd /d "%SCRIPT_DIR%.."
 echo [OK] React .env.local updated with IP: %IP%
 echo.
 
-REM Update Docker CORS configuration
-echo [3/6] Updating Docker CORS configuration...
-powershell -Command "(Get-Content qcar_docker\docker-compose.yml) -replace 'CORS_ALLOW_ORIGIN=http://localhost:3000,http://127.0.0.1:3000,http://[^:]+:3000', 'CORS_ALLOW_ORIGIN=http://localhost:3000,http://127.0.0.1:3000,http://%IP%:3000' | Set-Content qcar_docker\docker-compose.yml"
-echo [OK] CORS updated for IP: %IP%
+REM Update Docker environment variables
+echo [3/6] Updating Docker environment variables...
+cd /d "%SCRIPT_DIR%..\qcar_docker"
+(
+echo # Docker Compose environment variables
+echo # This file is automatically managed by the start script
+echo.
+echo # Exposed IP for CORS configuration
+echo EXPOSED_IP=%IP%
+) > .env
+cd /d "%SCRIPT_DIR%.."
+echo [OK] Docker .env updated for IP: %IP%
 echo.
 
 REM Start ROS Docker

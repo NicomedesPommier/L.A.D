@@ -2,17 +2,39 @@ services:
   ros:
     build: .
     image: qcar_docker-ros
+
+    # GPU acceleration for Gazebo rendering
+    # Commented out due to WSL GPU issues - uncomment if GPU is available
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu, compute, utility]
+
     ports:
       - "9090:9090"  # rosbridge
       - "7000:7000"  # estático (URDF/meshes)
       - "8080:8080"  # WVS (solo si lo activas)
+      - "10000:10000"  # ROS-TCP-Endpoint for Unity
       - "11345:11345" # Gazebo master (optional)
     environment:
-      - CORS_ALLOW_ORIGIN=http://localhost:3000,http://127.0.0.1:3000,http://169.254.83.107:3000,http://10.53.113.187:3000,
+      - CORS_ALLOW_ORIGIN=http://localhost:3000,http://127.0.0.1:3000,http://${EXPOSED_IP:-192.168.1.1}:3000
       - ENABLE_JSP=1
       - ENABLE_ROSAPI=1
       - ENABLE_WVS=1
       - ENABLE_TURTLESIM=1
       - ENABLE_GAZEBO=1
+      - ENABLE_DUMMY_CAMERAS=0       # Disable - use real Gazebo cameras with X11
+      - ENABLE_UNITY_TCP=1           # Enable ROS-TCP-Endpoint for Unity
+      - UNITY_TCP_PORT=10000         # Port for Unity connection
       - GAZEBO_WORLD=/ros2_ws/src/qcar_bringup/worlds/simple_track.world
-      - DISPLAY=:99
+      - IP_CONFIG_PATH=/config/ip_config.json
+    volumes:
+      - ../config/ip_config.json:/config/ip_config.json:ro
+      - user_workspaces:/workspaces  # Persistent volume for user IDE workspaces
+
+volumes:
+  user_workspaces:
+    driver: local

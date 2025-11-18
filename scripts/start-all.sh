@@ -46,16 +46,16 @@ REACT_APP_HOST=$IP
 EOF
 echo -e "${GREEN}✓${NC} React .env.local updated with IP: ${BLUE}$IP${NC}\n"
 
-# Update Docker CORS configuration
-echo -e "${GREEN}[3/6]${NC} Updating Docker CORS configuration..."
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    # macOS
-    sed -i '' "s|CORS_ALLOW_ORIGIN=http://localhost:3000,http://127.0.0.1:3000,http://[^:]*:3000|CORS_ALLOW_ORIGIN=http://localhost:3000,http://127.0.0.1:3000,http://$IP:3000|" qcar_docker/docker-compose.yml
-else
-    # Linux
-    sed -i "s|CORS_ALLOW_ORIGIN=http://localhost:3000,http://127.0.0.1:3000,http://[^:]*:3000|CORS_ALLOW_ORIGIN=http://localhost:3000,http://127.0.0.1:3000,http://$IP:3000|" qcar_docker/docker-compose.yml
-fi
-echo -e "${GREEN}✓${NC} CORS updated for IP: ${BLUE}$IP${NC}\n"
+# Update Docker environment variables
+echo -e "${GREEN}[3/6]${NC} Updating Docker environment variables..."
+cat > qcar_docker/.env <<EOF
+# Docker Compose environment variables
+# This file is automatically managed by the start script
+
+# Exposed IP for CORS configuration
+EXPOSED_IP=$IP
+EOF
+echo -e "${GREEN}✓${NC} Docker .env updated for IP: ${BLUE}$IP${NC}\n"
 
 # Start ROS Docker
 echo -e "${GREEN}[4/6]${NC} Starting ROS 2 Docker (rosbridge + QCar + Gazebo)..."

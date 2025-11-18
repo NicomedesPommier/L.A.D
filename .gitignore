@@ -26,3 +26,9 @@
 # SO / otros
 .DS_Store
 Thumbs.db
+
+# Side projects
+LAD V2/
+
+# Windows reserved names
+nul
