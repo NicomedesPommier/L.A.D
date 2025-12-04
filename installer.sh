@@ -15,7 +15,7 @@ echo ""
 echo "[1/7] Checking Python installation..."
 if ! command -v python3 &> /dev/null; then
     echo "ERROR: Python 3 is not installed"
-    echo "Please install Python 3.8+ from your package manager or https://www.python.org/downloads/"
+    echo "Please   Python 3.8+ from your package manager or https://www.python.org/downloads/"
     exit 1
 fi
 python3 --version
