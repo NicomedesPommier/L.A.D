@@ -52,7 +52,24 @@ if [ ! -d "../.venv" ]; then
     echo "Creating Python virtual environment..."
     python3 -m venv ../.venv
     if [ $? -ne 0 ]; then
+        echo ""
         echo "ERROR: Failed to create virtual environment"
+        echo ""
+        echo "This is likely because the 'python3-venv' package is not installed."
+        echo "Please install it with one of these commands:"
+        echo ""
+        echo "  Ubuntu/Debian:"
+        echo "    sudo apt-get update"
+        echo "    sudo apt-get install python3-venv"
+        echo ""
+        echo "  Fedora/RHEL:"
+        echo "    sudo dnf install python3-virtualenv"
+        echo ""
+        echo "  Arch Linux:"
+        echo "    sudo pacman -S python-virtualenv"
+        echo ""
+        echo "Then run this installer again."
+        echo ""
         exit 1
     fi
 fi

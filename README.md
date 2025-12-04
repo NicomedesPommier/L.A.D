@@ -43,6 +43,7 @@ L.A.D (Learn Autonomous Driving) is an **educational platform** designed for rob
 
 - **Node.js** >= 18.x and npm >= 9.x
 - **Python** >= 3.10 or 3.11
+  - **Linux only:** Also install `python3-venv` package (see Installation section)
 - **Docker** >= 24.x (for ROS 2 simulations)
 - **Git**
 
@@ -65,6 +66,16 @@ installer.bat
 # Clone the repository
 git clone <repository-url>
 cd L.A.D
+
+# Linux only: Install python3-venv first
+# Ubuntu/Debian:
+sudo apt-get update && sudo apt-get install python3-venv
+
+# Fedora/RHEL:
+sudo dnf install python3-virtualenv
+
+# Arch Linux:
+sudo pacman -S python-virtualenv
 
 # Make installer executable and run
 chmod +x installer.sh

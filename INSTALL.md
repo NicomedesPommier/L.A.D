@@ -7,9 +7,26 @@ This guide will help you install and set up the L.A.D (Learn Autonomous Driving)
 Before you begin, ensure you have the following installed:
 
 - **Python** 3.10 or 3.11 ([Download](https://www.python.org/downloads/))
+  - **Linux only:** Also install `python3-venv` package (see below)
 - **Node.js** 18.x or higher and npm ([Download](https://nodejs.org/))
 - **Docker Desktop** ([Download](https://www.docker.com/products/docker-desktop/))
 - **Git** ([Download](https://git-scm.com/downloads))
+
+### Linux-Specific Prerequisites
+
+On Linux systems, you need to install the `python3-venv` package separately:
+
+```bash
+# Ubuntu/Debian
+sudo apt-get update
+sudo apt-get install python3 python3-pip python3-venv
+
+# Fedora/RHEL
+sudo dnf install python3 python3-pip python3-virtualenv
+
+# Arch Linux
+sudo pacman -S python python-pip python-virtualenv
+```
 
 ## Quick Installation
 
@@ -142,13 +159,22 @@ Each level includes objectives that students complete to earn points.
 # Make sure to check "Add Python to PATH" during installation
 ```
 
-**Linux/Mac:**
+**Linux:**
 ```bash
 # Ubuntu/Debian
 sudo apt-get update
 sudo apt-get install python3 python3-pip python3-venv
 
-# macOS (using Homebrew)
+# Fedora/RHEL
+sudo dnf install python3 python3-pip python3-virtualenv
+
+# Arch Linux
+sudo pacman -S python python-pip python-virtualenv
+```
+
+**macOS:**
+```bash
+# Using Homebrew
 brew install python@3.11
 ```
 
@@ -180,6 +206,28 @@ sudo apt-get install docker-compose-plugin
 # Add your user to docker group
 sudo usermod -aG docker $USER
 newgrp docker
+```
+
+### Virtual environment creation fails (Linux)
+
+**Error:** `python3 -m venv` fails with "No module named venv" or similar
+
+**Cause:** On Linux, the `python3-venv` package is not installed by default.
+
+**Solution:**
+```bash
+# Ubuntu/Debian
+sudo apt-get update
+sudo apt-get install python3-venv
+
+# Fedora/RHEL
+sudo dnf install python3-virtualenv
+
+# Arch Linux
+sudo pacman -S python-virtualenv
+
+# Then run the installer again
+./installer.sh
 ```
 
 ### Virtual environment activation fails
