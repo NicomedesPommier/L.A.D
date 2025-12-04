@@ -20,7 +20,7 @@ services:
       - "10000:10000"  # ROS-TCP-Endpoint for Unity
       - "11345:11345" # Gazebo master (optional)
     environment:
-      - CORS_ALLOW_ORIGIN=http://localhost:3000,http://127.0.0.1:3000,http://${EXPOSED_IP:-192.168.1.1}:3000
+      - CORS_ALLOW_ORIGIN=http://localhost:3000,http://127.0.0.1:3000,http://${EXPOSED_IP:-0.0.0.0}:3000
       - ENABLE_JSP=1
       - ENABLE_ROSAPI=1
       - ENABLE_WVS=1
@@ -38,3 +38,4 @@ services:
 volumes:
   user_workspaces:
     driver: local
+
