@@ -12,7 +12,7 @@ if (!newIP) {
   console.log('Usage:');
   console.log('  node scripts/set-ip.js <IP_ADDRESS>\n');
   console.log('Example:');
-  console.log('  node scripts/set-ip.js 192.168.1.100\n');
+  console.log('  node scripts/set-ip.js 0.0.0.0\n');
   process.exit(1);
 }
 
@@ -20,7 +20,7 @@ if (!newIP) {
 const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
 if (!ipRegex.test(newIP)) {
   console.error('\n❌ Error: Invalid IP address format\n');
-  console.log('Please provide a valid IPv4 address (e.g., 192.168.1.100)\n');
+  console.log('Please provide a valid IPv4 address\n');
   process.exit(1);
 }
 
