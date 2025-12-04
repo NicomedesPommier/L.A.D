@@ -82,14 +82,14 @@ sudo pacman -S python python-pip python-virtualenv
 
 The automated installer will:
 
-1. ✅ **Check prerequisites** - Verifies Python, Node.js, and Docker are installed
-2. ✅ **Create Python virtual environment** - Isolates Python dependencies
-3. ✅ **Install backend dependencies** - Installs Django and required packages from `requirements.txt`
-4. ✅ **Set up database** - Runs migrations to create database schema
-5. ✅ **Load sample data** - Imports pre-configured units, levels, and objectives
-6. ✅ **Create admin account** - Prompts you to create a superuser
-7. ✅ **Install frontend dependencies** - Runs `npm install` for React app
-8. ✅ **Build Docker images** - Creates ROS 2 simulation environment (takes 10-20 min)
+1.  **Check prerequisites** - Verifies Python, Node.js, and Docker are installed
+2.  **Create Python virtual environment** - Isolates Python dependencies
+3.  **Install backend dependencies** - Installs Django and required packages from `requirements.txt`
+4.  **Set up database** - Runs migrations to create database schema
+5.  **Load sample data** - Imports pre-configured units, levels, and objectives
+6.  **Create admin account** - Prompts you to create a superuser
+7.  **Install frontend dependencies** - Runs `npm install` for React app
+8.  **Build Docker images** - Creates ROS 2 simulation environment (takes 10-20 min)
 
 ## Post-Installation
 
@@ -122,7 +122,7 @@ Compiled successfully!
 You can now view avedu in the browser.
 
   Local:            http://localhost:3000
-  On Your Network:  http://192.168.x.x:3000
+  On Your Network:  http://x.x.x.x:3000
 ```
 
 **ROS Docker**
@@ -397,4 +397,4 @@ To remove the installation:
 
 ---
 
-**Installation complete! Enjoy learning autonomous driving with L.A.D!** 🚗🤖
+**Installation complete! Enjoy learning autonomous driving with L.A.D!** 
