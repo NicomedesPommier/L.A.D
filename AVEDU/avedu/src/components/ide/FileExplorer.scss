@@ -1,13 +1,5 @@
 // components/ide/FileExplorer.scss
 
-:root {
-  --explorer-bg: rgba(0, 0, 0, 0.25);
-  --explorer-border: rgba(255, 255, 255, 0.12);
-  --explorer-hover: rgba(125, 249, 255, 0.06);
-  --explorer-selected: rgba(125, 249, 255, 0.12);
-  --explorer-selected-border: rgba(125, 249, 255, 0.35);
-}
-
 .file-explorer {
   display: flex;
   flex-direction: column;
@@ -16,29 +8,31 @@
   border: 1px solid var(--explorer-border);
   border-radius: 10px;
   overflow: hidden;
+  transition: background 0.3s ease, border-color 0.3s ease;
 
   &__header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0.6rem 0.75rem;
-    background: rgba(0, 0, 0, 0.35);
+    background: var(--bg-surface);
     border-bottom: 1px solid var(--explorer-border);
+    transition: background 0.3s ease;
   }
 
   &__title {
     font-weight: 700;
     letter-spacing: 0.08em;
-    color: #7df9ff;
+    color: var(--neon);
     text-transform: uppercase;
     font-size: 0.85rem;
   }
 
   &__action {
     appearance: none;
-    background: rgba(125, 249, 255, 0.1);
-    border: 1px solid rgba(125, 249, 255, 0.3);
-    color: #7df9ff;
+    background: rgba(var(--neon-rgb), 0.1);
+    border: 1px solid rgba(var(--neon-rgb), 0.3);
+    color: var(--neon);
     border-radius: 6px;
     padding: 0.25rem 0.5rem;
     font-size: 1.2rem;
@@ -47,8 +41,8 @@
     transition: all 0.2s ease;
 
     &:hover {
-      background: rgba(125, 249, 255, 0.2);
-      box-shadow: 0 0 8px rgba(125, 249, 255, 0.3);
+      background: rgba(var(--neon-rgb), 0.2);
+      box-shadow: 0 0 8px rgba(var(--neon-rgb), 0.3);
     }
   }
 
@@ -64,15 +58,15 @@
     }
 
     &::-webkit-scrollbar-track {
-      background: rgba(0, 0, 0, 0.2);
+      background: var(--scrollbar-track);
     }
 
     &::-webkit-scrollbar-thumb {
-      background: rgba(125, 249, 255, 0.3);
+      background: var(--scrollbar-thumb);
       border-radius: 4px;
 
       &:hover {
-        background: rgba(125, 249, 255, 0.5);
+        background: var(--scrollbar-thumb-hover);
       }
     }
   }
@@ -86,11 +80,11 @@
   }
 
   &__context-menu {
-    background: rgba(10, 14, 26, 0.95);
-    border: 1px solid rgba(125, 249, 255, 0.3);
+    background: var(--context-menu-bg);
+    border: 1px solid rgba(var(--neon-rgb), 0.3);
     border-radius: 8px;
     padding: 0.25rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 20px rgba(125, 249, 255, 0.1);
+    box-shadow: var(--shadow-md), 0 0 20px rgba(var(--neon-rgb), 0.1);
     z-index: 1000;
     min-width: 150px;
 
@@ -98,7 +92,7 @@
       appearance: none;
       background: transparent;
       border: none;
-      color: #e6f1ff;
+      color: var(--text);
       padding: 0.5rem 0.75rem;
       width: 100%;
       text-align: left;
@@ -108,15 +102,31 @@
       font-size: 0.9rem;
 
       &:hover {
-        background: rgba(125, 249, 255, 0.15);
+        background: rgba(var(--neon-rgb), 0.15);
       }
 
       &.danger {
-        color: #ff5c5c;
+        color: var(--error-light);
 
         &:hover {
-          background: rgba(255, 92, 92, 0.15);
+          background: rgba(220, 92, 92, 0.15);
         }
+      }
+    }
+  }
+}
+
+[data-theme="light"] {
+  .file-explorer {
+    &__action:hover {
+      box-shadow: var(--shadow-sm);
+    }
+
+    &__context-menu {
+      box-shadow: var(--shadow-md);
+
+      button.danger {
+        color: var(--error);
       }
     }
   }
@@ -139,13 +149,13 @@
 
   &:hover {
     background: var(--explorer-hover);
-    border-color: rgba(125, 249, 255, 0.2);
+    border-color: rgba(var(--neon-rgb), 0.2);
   }
 
   &--selected {
     background: var(--explorer-selected);
     border-color: var(--explorer-selected-border);
-    box-shadow: inset 0 0 8px rgba(125, 249, 255, 0.1);
+    box-shadow: inset 0 0 8px rgba(var(--neon-rgb), 0.1);
   }
 
   &__icon {
@@ -159,31 +169,39 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: #e6f1ff;
+    color: var(--text);
   }
 
   &__input {
     flex: 1;
     appearance: none;
-    background: rgba(0, 0, 0, 0.4);
-    border: 1px solid rgba(125, 249, 255, 0.5);
+    background: var(--bg-surface);
+    border: 1px solid rgba(var(--neon-rgb), 0.5);
     border-radius: 4px;
     padding: 0.2rem 0.4rem;
-    color: #e6f1ff;
+    color: var(--text);
     font-family: inherit;
     font-size: inherit;
     outline: none;
 
     &:focus {
-      box-shadow: 0 0 0 2px rgba(125, 249, 255, 0.3);
+      box-shadow: 0 0 0 2px rgba(var(--neon-rgb), 0.3);
     }
   }
 
   &__badge {
-    color: #ff5cf4;
+    color: var(--neon2);
     font-size: 1.2rem;
     line-height: 1;
     flex-shrink: 0;
+  }
+}
+
+[data-theme="light"] {
+  .file-tree-item {
+    &--selected {
+      box-shadow: var(--shadow-sm);
+    }
   }
 }
 

@@ -6,6 +6,7 @@ import { Outlet, NavLink, useParams } from "react-router-dom";
 import { apiFetch } from "../context/AuthContext";
 import { API_BASE } from "../config";
 import { ProgressProvider } from "../context/ProgressContext";
+import ThemeToggle from "../components/ThemeToggle";
 import "../styles/pages/_learn.scss";
 
 const DEBUG = true;
@@ -178,6 +179,11 @@ export default function Learn() {
   return (
     <ProgressProvider>
       <div className={layoutClass}>
+        {/* Theme Toggle - Fixed position */}
+        <div style={{ position: 'fixed', top: '1rem', right: '1rem', zIndex: 1000 }}>
+          <ThemeToggle />
+        </div>
+
         {/* Sidebar */}
         <aside className="learn-sidebar">
           <button className="toggle" onClick={toggle} aria-label="Toggle sidebar" />

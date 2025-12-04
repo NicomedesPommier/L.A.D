@@ -2,13 +2,16 @@
    Gazebo Simulator Styles
    ============================================================= */
 
+@use '../variables' as *;
+
 .gazebo-simulator {
   display: grid;
   gap: 1rem;
   padding: 1rem;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--bg-surface);
   border-radius: 12px;
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.2));
+  border: 1px solid var(--border);
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 
 /* Status Bar */
@@ -25,13 +28,13 @@
   &.connected {
     background: rgba(72, 187, 120, 0.15);
     border: 1px solid rgba(72, 187, 120, 0.4);
-    color: #48bb78;
+    color: var(--success);
   }
 
   &.disconnected {
     background: rgba(220, 38, 38, 0.15);
     border: 1px solid rgba(220, 38, 38, 0.4);
-    color: #dc2626;
+    color: var(--error);
   }
 
   .status-dot {
@@ -68,11 +71,12 @@
 }
 
 .sensor-panel {
-  background: var(--glass, rgba(255, 255, 255, 0.06));
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.2));
+  background: var(--glass);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 0.75rem;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-sm);
+  transition: background 0.3s ease, border-color 0.3s ease;
 
   &__header {
     display: flex;
@@ -80,7 +84,7 @@
     gap: 0.5rem;
     margin-bottom: 0.75rem;
     padding-bottom: 0.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--border-light);
   }
 
   &__icon {
@@ -92,7 +96,7 @@
     font-size: 0.95rem;
     font-weight: 700;
     letter-spacing: 0.05em;
-    color: var(--neon, #7df9ff);
+    color: var(--neon);
   }
 
   &__body {
@@ -100,7 +104,7 @@
   }
 
   &__empty {
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--text-muted);
     font-style: italic;
     text-align: center;
     padding: 1rem 0;
@@ -112,7 +116,7 @@
   border-collapse: collapse;
 
   tr {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--border-light);
 
     &:last-child {
       border-bottom: none;
@@ -121,14 +125,14 @@
 
   &__label {
     padding: 0.4rem 0;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--text-dim);
     font-weight: 500;
   }
 
   &__value {
     padding: 0.4rem 0;
     text-align: right;
-    color: var(--text, #e6f1ff);
+    color: var(--text);
     font-family: 'Courier New', monospace;
     font-weight: 600;
   }
@@ -141,21 +145,23 @@
 }
 
 .camera-feed {
-  background: var(--glass, rgba(255, 255, 255, 0.06));
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.2));
+  background: var(--glass);
+  border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   height: 100%;
+  transition: background 0.3s ease, border-color 0.3s ease;
 
   &__header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem 1rem;
-    background: rgba(0, 0, 0, 0.3);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-light);
+    transition: background 0.3s ease;
 
     h3 {
       margin: 0;
@@ -168,7 +174,7 @@
   &__fps {
     font-size: 0.85rem;
     font-weight: 600;
-    color: var(--neon, #7df9ff);
+    color: var(--neon);
     font-family: 'Courier New', monospace;
   }
 
@@ -199,7 +205,7 @@
 
   &__message {
     text-align: center;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-muted);
 
     p {
       margin: 0.5rem 0;
@@ -223,21 +229,22 @@
     display: flex;
     gap: 1rem;
     padding: 0.5rem 1rem;
-    background: rgba(0, 0, 0, 0.3);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-surface);
+    border-top: 1px solid var(--border-light);
     font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--text-muted);
+    transition: background 0.3s ease;
 
     .status {
       margin-left: auto;
       font-weight: 600;
 
       &.connected {
-        color: #48bb78;
+        color: var(--success);
       }
 
       &.disconnected {
-        color: #dc2626;
+        color: var(--error);
       }
     }
   }
@@ -251,17 +258,18 @@
 }
 
 .keyboard-control {
-  background: var(--glass, rgba(255, 255, 255, 0.06));
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.2));
+  background: var(--glass);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 1rem;
+  transition: background 0.3s ease, border-color 0.3s ease;
 
   h3 {
     margin: 0 0 1rem;
     font-size: 1rem;
     font-weight: 700;
     letter-spacing: 0.05em;
-    color: var(--neon, #7df9ff);
+    color: var(--neon);
   }
 
   .control-status {
@@ -279,13 +287,13 @@
       &.connected {
         background: rgba(72, 187, 120, 0.15);
         border: 1px solid rgba(72, 187, 120, 0.3);
-        color: #48bb78;
+        color: var(--success);
       }
 
       &.disconnected {
         background: rgba(220, 38, 38, 0.15);
         border: 1px solid rgba(220, 38, 38, 0.3);
-        color: #dc2626;
+        color: var(--error);
       }
     }
   }
@@ -293,8 +301,9 @@
   .speed-controls {
     margin-bottom: 1rem;
     padding: 0.75rem;
-    background: rgba(0, 0, 0, 0.2);
+    background: var(--bg-overlay);
     border-radius: 8px;
+    transition: background 0.3s ease;
 
     .speed-item {
       display: flex;
@@ -303,26 +312,26 @@
       font-size: 0.85rem;
 
       label {
-        color: rgba(255, 255, 255, 0.7);
+        color: var(--text-dim);
       }
 
       .speed-value {
         font-family: 'Courier New', monospace;
         font-weight: 600;
-        color: var(--neon, #7df9ff);
+        color: var(--neon);
       }
     }
 
     .speed-hint {
       margin-top: 0.5rem;
       font-size: 0.75rem;
-      color: rgba(255, 255, 255, 0.5);
+      color: var(--text-muted);
       text-align: center;
 
       kbd {
         padding: 0.15rem 0.35rem;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: var(--glass);
+        border: 1px solid var(--border);
         border-radius: 3px;
         font-size: 0.85em;
       }
@@ -348,8 +357,8 @@
       justify-content: center;
       padding: 0.75rem;
       min-width: 60px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 2px solid rgba(255, 255, 255, 0.15);
+      background: var(--glass);
+      border: 2px solid var(--border);
       border-radius: 8px;
       font-size: 0.85rem;
       font-weight: 600;
@@ -358,10 +367,10 @@
       cursor: default;
 
       &.active {
-        background: var(--neon, #7df9ff);
-        border-color: var(--neon, #7df9ff);
-        color: #000;
-        box-shadow: 0 0 15px rgba(125, 249, 255, 0.5);
+        background: var(--neon);
+        border-color: var(--neon);
+        color: var(--text-inverse);
+        box-shadow: 0 0 15px rgba(var(--neon-rgb), 0.5);
         transform: translateY(-2px);
       }
 
@@ -386,14 +395,14 @@
       .velocity-label {
         display: block;
         font-size: 0.8rem;
-        color: rgba(255, 255, 255, 0.7);
+        color: var(--text-dim);
         margin-bottom: 0.25rem;
       }
 
       .velocity-bar {
         height: 20px;
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: var(--glass);
+        border: 1px solid var(--border);
         border-radius: 10px;
         overflow: hidden;
         position: relative;
@@ -403,11 +412,11 @@
           transition: width 0.15s ease;
 
           &--linear {
-            background: linear-gradient(90deg, #7df9ff, #4ade80);
+            background: linear-gradient(90deg, var(--neon), var(--success));
           }
 
           &--angular {
-            background: linear-gradient(90deg, #ff5cf4, #f97316);
+            background: linear-gradient(90deg, var(--neon2), #f97316);
           }
         }
       }
@@ -416,7 +425,7 @@
         display: block;
         font-size: 0.8rem;
         font-family: 'Courier New', monospace;
-        color: var(--neon, #7df9ff);
+        color: var(--neon);
         margin-top: 0.25rem;
         text-align: right;
       }
@@ -429,7 +438,7 @@
     background: rgba(220, 38, 38, 0.2);
     border: 2px solid rgba(220, 38, 38, 0.5);
     border-radius: 8px;
-    color: #fca5a5;
+    color: var(--error-light);
     font-size: 0.9rem;
     font-weight: 700;
     letter-spacing: 0.05em;
@@ -438,7 +447,7 @@
 
     &:hover:not(:disabled) {
       background: rgba(220, 38, 38, 0.3);
-      border-color: #dc2626;
+      border-color: var(--error);
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
     }
@@ -455,17 +464,18 @@
 }
 
 .gazebo-hints {
-  background: var(--glass, rgba(255, 255, 255, 0.06));
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.2));
+  background: var(--glass);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 1rem;
+  transition: background 0.3s ease, border-color 0.3s ease;
 
   h3 {
     margin: 0 0 0.75rem;
     font-size: 0.95rem;
     font-weight: 700;
     letter-spacing: 0.05em;
-    color: var(--neon, #7df9ff);
+    color: var(--neon);
   }
 
   ul {
@@ -473,7 +483,7 @@
     padding-left: 1.25rem;
     font-size: 0.85rem;
     line-height: 1.6;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text-dim);
 
     li {
       margin-bottom: 0.5rem;
@@ -482,8 +492,8 @@
 
   kbd {
     padding: 0.15rem 0.4rem;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--glass);
+    border: 1px solid var(--border);
     border-radius: 4px;
     font-size: 0.85em;
     font-family: 'Courier New', monospace;
@@ -495,10 +505,11 @@
   display: flex;
   gap: 2rem;
   padding: 0.75rem 1rem;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--bg-surface);
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-light);
   flex-wrap: wrap;
+  transition: background 0.3s ease;
 
   .gazebo-footer-item {
     display: flex;
@@ -507,13 +518,13 @@
     font-size: 0.85rem;
 
     .label {
-      color: rgba(255, 255, 255, 0.6);
+      color: var(--text-muted);
     }
 
     .value {
       font-family: 'Courier New', monospace;
       font-weight: 600;
-      color: var(--neon, #7df9ff);
+      color: var(--neon);
     }
   }
 }
@@ -528,10 +539,11 @@
     display: flex;
     align-items: center;
     padding: 0.75rem 1rem;
-    background: rgba(0, 0, 0, 0.3);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-light);
     gap: 0.5rem;
     flex-wrap: wrap;
+    transition: background 0.3s ease;
 
     h3 {
       margin: 0;
@@ -548,23 +560,23 @@
 
   &__tab {
     padding: 0.4rem 0.75rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: var(--glass);
+    border: 1px solid var(--border);
     border-radius: 6px;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--text-dim);
     font-size: 0.85rem;
     cursor: pointer;
     transition: all 0.2s ease;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(125, 249, 255, 0.3);
+      background: var(--glass-hover);
+      border-color: rgba(var(--neon-rgb), 0.3);
     }
 
     &.active {
-      background: rgba(125, 249, 255, 0.2);
-      border-color: var(--neon, #7df9ff);
-      color: var(--neon, #7df9ff);
+      background: rgba(var(--neon-rgb), 0.2);
+      border-color: var(--neon);
+      color: var(--neon);
       font-weight: 600;
     }
   }
@@ -592,7 +604,7 @@
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   font-size: 0.9rem;
 
   p {
@@ -606,40 +618,42 @@
 }
 
 .camera-feed__message--error {
-  color: #fca5a5;
+  color: var(--error-light);
 
   .camera-feed__icon {
-    color: #dc2626;
+    color: var(--error);
   }
 }
 
 /* ROS Debug Panel */
 .ros-debug-panel {
-  background: var(--glass, rgba(255, 255, 255, 0.06));
-  border: 1px solid var(--border, rgba(255, 255, 255, 0.2));
+  background: var(--glass);
+  border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
+  transition: background 0.3s ease, border-color 0.3s ease;
 
   &__header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 0.75rem 1rem;
-    background: rgba(0, 0, 0, 0.2);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--bg-overlay);
+    border-bottom: 1px solid var(--border-light);
+    transition: background 0.3s ease;
 
     h3 {
       margin: 0;
       font-size: 0.95rem;
       font-weight: 700;
       letter-spacing: 0.05em;
-      color: #f59e0b;
+      color: var(--warning);
     }
   }
 
   &__toggle {
     font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--text-muted);
   }
 
   &__body {
@@ -652,18 +666,18 @@
     justify-content: space-between;
     margin-bottom: 0.75rem;
     padding-bottom: 0.75rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--border-light);
 
     strong {
-      color: rgba(255, 255, 255, 0.8);
+      color: var(--text-dim);
     }
 
     .status-connected {
-      color: #10b981;
+      color: var(--success);
     }
 
     .status-disconnected {
-      color: #dc2626;
+      color: var(--error);
     }
   }
 
@@ -680,10 +694,10 @@
     border-radius: 6px;
     font-size: 0.8rem;
     line-height: 1.5;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--text-dim);
 
     code {
-      background: rgba(0, 0, 0, 0.3);
+      background: var(--bg-surface);
       padding: 0.15rem 0.4rem;
       border-radius: 3px;
       font-family: 'Courier New', monospace;
@@ -694,9 +708,10 @@
 
 .debug-topic {
   padding: 0.5rem;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--bg-overlay);
   border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid var(--border-light);
+  transition: background 0.3s ease;
 
   &__header {
     display: flex;
@@ -706,7 +721,7 @@
 
   &__name {
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--text);
   }
 
   &__count {
@@ -721,11 +736,11 @@
     code {
       display: block;
       padding: 0.4rem;
-      background: rgba(0, 0, 0, 0.3);
+      background: var(--bg-surface);
       border-radius: 4px;
       font-family: 'Courier New', monospace;
       font-size: 0.8em;
-      color: var(--neon, #7df9ff);
+      color: var(--neon);
       overflow-x: auto;
     }
   }
@@ -736,7 +751,7 @@
     background: rgba(220, 38, 38, 0.1);
     border: 1px solid rgba(220, 38, 38, 0.3);
     border-radius: 4px;
-    color: #fca5a5;
+    color: var(--error-light);
     font-size: 0.8em;
   }
 }

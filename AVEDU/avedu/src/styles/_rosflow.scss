@@ -1,7 +1,4 @@
-:root {
-  --bg1: #0b0f1a; --bg2: #111c3a; --neon: #7df9ff; --neon2: #ff5cf4; --glass: rgba(255,255,255,0.06);
-  --border: rgba(255,255,255,0.2); --text: #e6f1ff; --text-dim: #a8b3d1;
-}
+@use './variables' as *;
 
 /* ========= layout 3 franjas ========= */
 .rfp-wrap {
@@ -19,6 +16,7 @@
   overflow-x: auto;
   overflow-y: visible;
   min-height: 56px;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 .rfp-palette__inner {
   display: flex;
@@ -31,9 +29,10 @@
 .rfp-canvas {
   border: 1px solid var(--border);
   border-radius: 12px;
-  background: rgba(0,0,0,.25);
+  background: var(--bg-overlay);
   overflow: hidden;
   min-height: 420px;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 .rfp-canvas__inner {
   width: 100%;
@@ -42,12 +41,13 @@
 
 /* ---------- Terminal (bottom) ---------- */
 .rfp-terminal {
-  background: rgba(0,0,0,.35);
+  background: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: .6rem .75rem;
   display: grid;
   gap: .5rem;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 .rfp-terminal__title {
   font-weight: 700;
@@ -56,11 +56,12 @@
   margin: 0;
   padding: .6rem .75rem;
   border-radius: 10px;
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(0,0,0,.35);
+  border: 1px solid var(--border-light);
+  background: var(--bg-surface);
   color: var(--text);
   white-space: pre-wrap;
   word-break: break-word;
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 .rfp-terminal__actions { display: flex; gap: .5rem; }
 .rfp-terminal__hint { opacity: .85; }
@@ -71,8 +72,9 @@
   background: var(--glass);
   border: 1px solid var(--border);
   border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0,0,0,.25);
+  box-shadow: var(--shadow-sm);
   color: var(--text);
+  transition: background 0.3s ease, border-color 0.3s ease;
 }
 .rf-card__title {
   padding: .5rem .75rem;
@@ -85,37 +87,45 @@
 .rf-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
 
 .rf-input {
-  background: rgba(0,0,0,.35);
-  border: 1px solid rgba(255,255,255,.18);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
   border-radius: 8px;
   color: var(--text);
   padding: .4rem .55rem;
   font: inherit;
   outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.3s ease;
 }
 .rf-input:focus {
-  border-color: rgba(125,249,255,.55);
-  box-shadow: 0 0 0 2px rgba(125,249,255,.18);
+  border-color: rgba(var(--neon-rgb),.55);
+  box-shadow: 0 0 0 2px rgba(var(--neon-rgb),.18);
 }
 
 .rf-chips { display: flex; gap: .35rem; flex-wrap: wrap; }
 .rf-chip {
-  background: rgba(125,249,255,.12);
-  border: 1px solid rgba(125,249,255,.35);
+  background: rgba(var(--neon-rgb),.12);
+  border: 1px solid rgba(var(--neon-rgb),.35);
   color: var(--text);
   padding: .2rem .5rem;
   border-radius: 999px;
   font-size: .9rem;
   user-select: none;
   cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
-.rf-chip:hover { border-color: rgba(125,249,255,.65); box-shadow: 0 0 10px rgba(125,249,255,.22); }
+.rf-chip:hover { border-color: rgba(var(--neon-rgb),.65); box-shadow: 0 0 10px rgba(var(--neon-rgb),.22); }
 .rf-chip--ghost { opacity: .6; cursor: default; }
+
+[data-theme="light"] {
+  .rf-chip:hover {
+    box-shadow: var(--shadow-sm);
+  }
+}
 
 /* botones (usa tu tema si ya lo tienes) */
 .btn {
   cursor: pointer;
-  border: 1px solid rgba(255,255,255,.25);
+  border: 1px solid var(--border);
   background: var(--glass);
   color: var(--text);
   border-radius: 10px;
@@ -125,8 +135,14 @@
 }
 .btn:hover {
   transform: translateY(-1px);
-  border-color: rgba(125,249,255,.55);
-  box-shadow: 0 8px 18px rgba(125,249,255,.25), 0 0 24px rgba(255,92,244,.12) inset;
+  border-color: rgba(var(--neon-rgb),.55);
+  box-shadow: 0 8px 18px rgba(var(--neon-rgb),.25), 0 0 24px rgba(var(--neon2-rgb),.12) inset;
+}
+
+[data-theme="light"] {
+  .btn:hover {
+    box-shadow: var(--shadow-sm);
+  }
 }
 
 /* ========= Handle styling with labels ========= */
@@ -286,7 +302,13 @@
   background: var(--glass);
   color: var(--neon);
   border-color: var(--neon);
-  box-shadow: 0 0 8px rgba(125, 249, 255, 0.25);
+  box-shadow: 0 0 8px rgba(var(--neon-rgb), 0.25);
+}
+
+[data-theme="light"] {
+  .rfp-palette__tab--active {
+    box-shadow: var(--shadow-sm);
+  }
 }
 
 /* responsive */

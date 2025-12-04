@@ -4,7 +4,11 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import AuthProvider from "./context/AuthContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import { IP } from "./ip";
+
+// Import centralized styles with theme variables
+import "./styles/_variables.scss";
 
 /**
  * Host detection (auto-configured by start-all script via REACT_APP_HOST)
@@ -18,12 +22,14 @@ const HOST = process.env.REACT_APP_HOST || "localhost";
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <IP host={HOST /* , ports: PORTS */}>
-      <BrowserRouter>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </BrowserRouter>
-    </IP>
+    <ThemeProvider>
+      <IP host={HOST /* , ports: PORTS */}>
+        <BrowserRouter>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </BrowserRouter>
+      </IP>
+    </ThemeProvider>
   </React.StrictMode>
 );

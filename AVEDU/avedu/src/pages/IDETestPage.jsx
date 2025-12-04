@@ -13,6 +13,7 @@ import { CategorizedPalette } from "../components/blocks";
 import { paletteCategorized } from "../components/blocks";
 import { computeUrdfXml } from "../components/blocks/urdf-helpers";
 import CanvasSelector from "../components/ide/CanvasSelector";
+import ThemeToggle from "../components/ThemeToggle";
 import fileApi from "../services/fileApi";
 import "../styles/_rosflow.scss";
 import "../styles/pages/_ide-test.scss";
@@ -447,6 +448,7 @@ function IDETestPageInner() {
           <button className="btn btn--small btn--primary" onClick={handleSave}>
             💾 Save
           </button>
+          <ThemeToggle />
         </div>
       </header>
 
