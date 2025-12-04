@@ -117,13 +117,13 @@ This will:
 
 If you prefer manual control or the installer fails:
 
-1️⃣ **Clone the repository**
+ **Clone the repository**
 ```bash
 git clone <repository-url>
 cd L.A.D
 ```
 
-2️⃣ **Install Backend**
+ **Install Backend**
 ```bash
 cd LAD/lad
 python -m venv ../.venv
@@ -134,19 +134,19 @@ python manage.py loaddata fixtures/initial_data.json
 python manage.py createsuperuser
 ```
 
-3️⃣ **Install Frontend**
+ **Install Frontend**
 ```bash
 cd AVEDU/avedu
 npm install
 ```
 
-4️⃣ **Build ROS Docker**
+ **Build ROS Docker**
 ```bash
 cd qcar_docker
 docker compose build
 ```
 
-5️⃣ **Start all services** (use scripts/start-all.bat or start-all.sh)
+ **Start all services** (use scripts/start-all.bat or start-all.sh)
 
 ### First Steps After Installation
 
@@ -158,7 +158,7 @@ docker compose build
 
 ---
 
-## ✨ Features
+##  Features
 
 ### For Students
 -  **Structured Learning Path** - Organized units and levels with progressive difficulty
@@ -187,28 +187,7 @@ docker compose build
 
 ### System Overview
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Student's Browser                        │
-│  ┌────────────────────────────────────────────────────┐    │
-│  │  React Frontend (Port 3000)                         │    │
-│  │  - Course navigation                                │    │
-│  │  - ROS widgets (3D visualization, Blockly, etc.)    │    │
-│  │  - Progress tracking                                │    │
-│  └─────────┬──────────────────────┬────────────────────┘    │
-└────────────┼──────────────────────┼─────────────────────────┘
-             │ HTTP/REST            │ WebSocket (roslib.js)
-             │ (JWT Auth)           │
-    ┌────────▼────────┐    ┌────────▼──────────┐
-    │  Django API     │    │  ROS 2 + rosbridge│
-    │  (Port 8000)    │    │  (Port 9090)      │
-    │                 │    │                   │
-    │  - Auth/Users   │    │  - QCar sim       │
-    │  - Units/Levels │    │  - Turtlesim      │
-    │  - Progress DB  │    │  - Custom nodes   │
-    │  - Objectives   │    │  - Gazebo         │
-    └─────────────────┘    └───────────────────┘
-```
+
 
 ### Data Flow
 
@@ -249,7 +228,7 @@ docker compose build
 
 ---
 
-## 🎓 How It Works
+##  How It Works
 
 ### Learning Flow
 
@@ -555,7 +534,7 @@ npm start
 
 ---
 
-## 🌐 LAN Deployment
+##  LAN Deployment
 
 ### Quick LAN Setup
 
