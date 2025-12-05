@@ -1,4 +1,9 @@
 // src/index.jsx
+
+// IMPORTANT: Import EventEmitter2 patch first to prevent uncaught 'error' events
+// from roslib WebSocket failures when navigating between sections
+import "./parches/eventemitter2-error-safe";
+
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
