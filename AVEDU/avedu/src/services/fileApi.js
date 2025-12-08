@@ -179,6 +179,69 @@ export async function executeCommand(canvasId, command, workingDirectory = null)
 }
 
 // =============================================================================
+// Mesh Operations
+// =============================================================================
+
+/**
+ * Upload a mesh file (STL, DAE, etc.)
+ */
+export async function uploadMesh(canvasId, file, name = null) {
+  const formData = new FormData();
+  formData.append("file", file);
+  if (name) {
+    formData.append("name", name);
+  }
+
+  const token = localStorage.getItem("token");
+  const response = await fetch(`${API_BASE}/workspace/canvases/${canvasId}/meshes/upload/`, {
+    method: "POST",
+    headers: {
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    body: formData,
+  });
+  return handleResponse(response);
+}
+
+/**
+ * Import a mesh from URL
+ */
+export async function importMeshFromUrl(canvasId, url, name = null) {
+  const response = await fetch(`${API_BASE}/workspace/canvases/${canvasId}/meshes/import/`, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({
+      url,
+      name,
+    }),
+  });
+  return handleResponse(response);
+}
+
+/**
+ * List all custom meshes for a canvas
+ */
+export async function listMeshes(canvasId) {
+  const response = await fetch(`${API_BASE}/workspace/canvases/${canvasId}/meshes/`, {
+    headers: getAuthHeaders(),
+  });
+  return handleResponse(response);
+}
+
+/**
+ * Delete a custom mesh
+ */
+export async function deleteMesh(canvasId, meshId) {
+  const response = await fetch(`${API_BASE}/workspace/canvases/${canvasId}/meshes/${meshId}/`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+  if (!response.ok) {
+    throw new Error("Failed to delete mesh");
+  }
+}
+
+// =============================================================================
 // Helper Functions
 // =============================================================================
 
@@ -211,17 +274,23 @@ export default {
   updateCanvas,
   deleteCanvas,
   getFileTree,
-  
+
   // File operations
   listFiles,
   getFile,
   createFile,
   updateFile,
   deleteFile,
-  
+
+  // Mesh operations
+  uploadMesh,
+  importMeshFromUrl,
+  listMeshes,
+  deleteMesh,
+
   // Command execution
   executeCommand,
-  
+
   // Helpers
   saveGeneratedCode,
 };

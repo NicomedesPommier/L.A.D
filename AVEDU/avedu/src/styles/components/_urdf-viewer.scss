@@ -1,0 +1,70 @@
+// styles/components/_urdf-viewer.scss
+// URDF Viewer component styles for IDE sidebar
+
+@use '../variables' as *;
+
+.urdf-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--bg-surface);
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 0.75rem;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--ide-border);
+    transition: background 0.3s ease;
+  }
+
+  &__title {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--neon);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  &__canvas {
+    flex: 1;
+    position: relative;
+    background: var(--ide-bg);
+    overflow: hidden;
+    transition: background 0.3s ease;
+  }
+
+  &__message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 2rem;
+    text-align: center;
+    color: var(--ide-text-muted);
+    font-size: 0.9rem;
+    gap: 1rem;
+
+    &--error {
+      color: var(--error-light);
+    }
+  }
+
+  &__icon {
+    font-size: 3rem;
+    opacity: 0.5;
+    margin-bottom: 0.5rem;
+  }
+}
+
+// Light theme adjustments
+[data-theme="light"] {
+  .urdf-viewer {
+    &__canvas {
+      background: var(--bg-primary);
+    }
+  }
+}

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Canvas, WorkspaceFile
+from .models import Canvas, WorkspaceFile, CustomMesh
 
 
 class WorkspaceFileSerializer(serializers.ModelSerializer):
@@ -54,3 +54,21 @@ class FileTreeSerializer(serializers.Serializer):
     type = serializers.ChoiceField(choices=["file", "directory"])
     children = serializers.ListField(required=False, allow_null=True)
     unsaved = serializers.BooleanField(required=False, default=False)
+
+
+class CustomMeshSerializer(serializers.ModelSerializer):
+    """Serializer for custom mesh files"""
+    file_path = serializers.ReadOnlyField()
+
+    class Meta:
+        model = CustomMesh
+        fields = [
+            'id',
+            'name',
+            'file',
+            'file_path',
+            'file_size',
+            'file_type',
+            'created_at',
+        ]
+        read_only_fields = ['id', 'file_size', 'file_type', 'created_at']
