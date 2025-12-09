@@ -8,8 +8,10 @@ import os
 import json
 import shlex
 
-from .models import Canvas, WorkspaceFile
-from .serializers import CanvasSerializer, WorkspaceFileSerializer, FileTreeSerializer
+from .models import Canvas, WorkspaceFile, CustomMesh
+from .serializers import CanvasSerializer, WorkspaceFileSerializer, FileTreeSerializer, CustomMeshSerializer
+from django.core.files.base import ContentFile
+import requests
 
 # Docker container name for workspace operations
 DOCKER_CONTAINER = "qcar_docker-ros-1"
@@ -166,6 +168,195 @@ class WorkspaceFileViewSet(viewsets.ModelViewSet):
                 )
         except subprocess.CalledProcessError as e:
             print(f"Error deleting from Docker: {e.stderr.decode() if e.stderr else str(e)}")
+
+
+class MeshViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint for managing custom mesh files
+    """
+    serializer_class = CustomMeshSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        canvas_id = self.kwargs.get("canvas_pk")
+        return CustomMesh.objects.filter(
+            canvas_id=canvas_id, canvas__user=self.request.user
+        )
+
+    @action(detail=False, methods=["post"])
+    def upload(self, request, canvas_pk=None):
+        """
+        Upload a custom mesh file (.stl, .dae, .obj)
+
+        Request body (multipart/form-data):
+        {
+            "file": <file>,
+            "name": "optional_custom_name"
+        }
+        """
+        canvas = get_object_or_404(Canvas, id=canvas_pk, user=request.user)
+
+        uploaded_file = request.FILES.get("file")
+        if not uploaded_file:
+            return Response(
+                {"error": "No file provided"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate file extension
+        valid_extensions = [".stl", ".dae", ".obj", ".STL", ".DAE", ".OBJ"]
+        file_name = uploaded_file.name
+        file_ext = file_name[file_name.rfind("."):] if "." in file_name else ""
+
+        if file_ext not in valid_extensions:
+            return Response(
+                {"error": "Invalid file type. Supported: .stl, .dae, .obj"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Use provided name or file name
+        mesh_name = request.data.get("name") or file_name
+
+        # Check for duplicate name in this canvas
+        if CustomMesh.objects.filter(canvas=canvas, name=mesh_name).exists():
+            return Response(
+                {"error": f"Mesh with name '{mesh_name}' already exists"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Create mesh instance
+        mesh = CustomMesh.objects.create(
+            canvas=canvas,
+            user=request.user,
+            name=mesh_name,
+            file=uploaded_file,
+            file_size=uploaded_file.size,
+            file_type=file_ext.lower()
+        )
+
+        serializer = self.get_serializer(mesh)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=False, methods=["post"])
+    def import_from_url(self, request, canvas_pk=None):
+        """
+        Import a mesh file from a URL
+
+        Request body:
+        {
+            "url": "http://example.com/mesh.stl",
+            "name": "optional_custom_name"
+        }
+        """
+        canvas = get_object_or_404(Canvas, id=canvas_pk, user=request.user)
+
+        url = request.data.get("url")
+        if not url:
+            return Response(
+                {"error": "URL is required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            # Download file from URL
+            response = requests.get(url, timeout=30)
+            response.raise_for_status()
+
+            # Extract filename from URL
+            url_filename = url.split("/")[-1].split("?")[0]
+
+            # Validate file extension
+            valid_extensions = [".stl", ".dae", ".obj", ".STL", ".DAE", ".OBJ"]
+            file_ext = url_filename[url_filename.rfind("."):] if "." in url_filename else ""
+
+            if file_ext not in valid_extensions:
+                return Response(
+                    {"error": "Invalid file type in URL. Supported: .stl, .dae, .obj"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Use provided name or URL filename
+            mesh_name = request.data.get("name") or url_filename
+
+            # Check for duplicate name
+            if CustomMesh.objects.filter(canvas=canvas, name=mesh_name).exists():
+                return Response(
+                    {"error": f"Mesh with name '{mesh_name}' already exists"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Create mesh instance with downloaded content
+            mesh = CustomMesh(
+                canvas=canvas,
+                user=request.user,
+                name=mesh_name,
+                file_size=len(response.content),
+                file_type=file_ext.lower()
+            )
+
+            # Save file content
+            mesh.file.save(url_filename, ContentFile(response.content), save=True)
+
+            serializer = self.get_serializer(mesh)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except requests.exceptions.RequestException as e:
+            return Response(
+                {"error": f"Failed to download file from URL: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to import mesh: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+@api_view(["GET"])
+def serve_mesh(request, canvas_id, filename):
+    """
+    Serve mesh files for URDF visualization
+    Resolves package://workspace_{canvas_id}/meshes/{filename} URLs
+
+    Public endpoint - no authentication required for mesh viewing
+    """
+    try:
+        # Find the mesh file
+        mesh = CustomMesh.objects.filter(
+            canvas_id=canvas_id,
+            file__icontains=filename
+        ).first()
+
+        if not mesh:
+            return Response(
+                {"error": "Mesh file not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        # Determine content type based on file extension
+        content_type_map = {
+            '.stl': 'model/stl',
+            '.dae': 'model/vnd.collada+xml',
+            '.obj': 'model/obj',
+        }
+        content_type = content_type_map.get(mesh.file_type.lower(), 'application/octet-stream')
+
+        # Return the file with appropriate content type
+        from django.http import FileResponse
+        response = FileResponse(mesh.file.open('rb'), content_type=content_type)
+
+        # Add CORS headers to allow cross-origin requests from frontend
+        response['Access-Control-Allow-Origin'] = '*'
+        response['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+        response['Access-Control-Allow-Headers'] = 'Content-Type'
+
+        return response
+
+    except Exception as e:
+        return Response(
+            {"error": f"Failed to serve mesh: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 @api_view(["POST"])

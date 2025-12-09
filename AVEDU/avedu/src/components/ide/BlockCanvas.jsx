@@ -27,6 +27,7 @@ import "./BlockCanvas.scss";
  * @param {Function} props.onCodeGenerated - Callback with generated code
  * @param {Function} props.codeGenerator - Function to generate code from graph
  * @param {boolean} props.readOnly - Disable editing
+ * @param {string} props.canvasId - Canvas/workspace ID for file operations
  */
 export function BlockCanvas({
   initialNodes = [],
@@ -37,6 +38,7 @@ export function BlockCanvas({
   codeGenerator,
   readOnly = false,
   className = "",
+  canvasId,
 }) {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
@@ -138,12 +140,12 @@ export function BlockCanvas({
           id: `${type}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           type,
           position,
-          data: { ...defaultDataFor(type), onChange: onNodeDataChange },
+          data: { ...defaultDataFor(type), onChange: onNodeDataChange, canvasId },
           style: nodeStyle,
         },
       ]);
     },
-    [readOnly, screenToFlowPosition, setNodes, onNodeDataChange]
+    [readOnly, screenToFlowPosition, setNodes, onNodeDataChange, canvasId]
   );
 
   const onDragOver = useCallback(
@@ -174,7 +176,7 @@ export function BlockCanvas({
 
           return {
             ...n,
-            data: { ...n.data, onChange: onNodeDataChange },
+            data: { ...n.data, onChange: onNodeDataChange, canvasId },
             style: nodeStyle,
           };
         })
@@ -200,6 +202,9 @@ export function BlockCanvas({
         onDrop={onDrop}
         onDragOver={onDragOver}
         fitView
+        minZoom={0.05}
+        maxZoom={4}
+        defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
         proOptions={{ hideAttribution: true }}
         deleteKeyCode={readOnly ? [] : ["Backspace", "Delete"]}
         nodesDraggable={!readOnly}

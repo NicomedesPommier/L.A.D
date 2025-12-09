@@ -66,3 +66,57 @@ class WorkspaceFile(models.Model):
     def name(self):
         """Returns the file/directory name"""
         return self.path.split("/")[-1] if "/" in self.path else self.path
+
+
+class CustomMesh(models.Model):
+    """
+    Custom mesh files uploaded by users for their URDF robots
+    Supports STL, DAE, and OBJ file formats
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    canvas = models.ForeignKey(
+        Canvas,
+        on_delete=models.CASCADE,
+        related_name='custom_meshes'
+    )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='custom_meshes'
+    )
+    name = models.CharField(
+        max_length=255,
+        help_text="Display name for the mesh"
+    )
+    file = models.FileField(
+        upload_to='meshes/%Y/%m/%d/',
+        help_text="The actual mesh file (STL, DAE, OBJ)"
+    )
+    file_size = models.IntegerField(
+        help_text="File size in bytes"
+    )
+    file_type = models.CharField(
+        max_length=10,
+        help_text="File extension (.stl, .dae, .obj)"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ['canvas', 'name']
+        verbose_name = "Custom Mesh"
+        verbose_name_plural = "Custom Meshes"
+
+    def __str__(self):
+        return f"{self.name} ({self.canvas.name})"
+
+    @property
+    def file_path(self):
+        """
+        Returns the package:// style path for URDF
+        Format: package://workspace_{canvas_id}/meshes/{filename}
+        """
+        import os
+        filename = os.path.basename(self.file.name)
+        return f"package://workspace_{self.canvas.id}/meshes/{filename}"

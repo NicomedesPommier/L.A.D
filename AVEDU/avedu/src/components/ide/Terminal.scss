@@ -3,10 +3,11 @@
 .terminal {
   width: 100%;
   height: 100%;
-  background: #0b1020;
+  background: var(--terminal-bg);
   border-radius: 8px;
   overflow: hidden;
   position: relative;
+  transition: background 0.3s ease;
 
   // Xterm.js container styling
   :global {
@@ -23,15 +24,15 @@
       }
 
       &::-webkit-scrollbar-track {
-        background: rgba(0, 0, 0, 0.2);
+        background: var(--scrollbar-track);
       }
 
       &::-webkit-scrollbar-thumb {
-        background: rgba(125, 249, 255, 0.3);
+        background: var(--scrollbar-thumb);
         border-radius: 5px;
 
         &:hover {
-          background: rgba(125, 249, 255, 0.5);
+          background: var(--scrollbar-thumb-hover);
         }
       }
     }
@@ -42,7 +43,7 @@
 
     // Selection styling
     .xterm-selection div {
-      background-color: rgba(125, 249, 255, 0.3) !important;
+      background-color: rgba(var(--neon-rgb), 0.3) !important;
     }
   }
 }
@@ -55,43 +56,43 @@
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  color: #e6f1ff;
+  color: var(--text);
 
   &__content {
     max-width: 600px;
     text-align: center;
 
     h3 {
-      color: #7df9ff;
+      color: var(--neon);
       margin: 0 0 1rem;
       font-size: 1.5rem;
-      text-shadow: 0 0 10px rgba(125, 249, 255, 0.5);
+      text-shadow: 0 0 10px rgba(var(--neon-rgb), 0.5);
     }
 
     p {
       margin: 1rem 0;
-      color: #9fb3c8;
+      color: var(--text-muted);
       line-height: 1.6;
     }
 
     pre {
-      background: rgba(0, 0, 0, 0.5);
-      border: 1px solid rgba(125, 249, 255, 0.3);
+      background: var(--bg-surface);
+      border: 1px solid rgba(var(--neon-rgb), 0.3);
       border-radius: 8px;
       padding: 1rem;
       margin: 1rem 0;
-      color: #7df9ff;
+      color: var(--neon);
       font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
       font-size: 0.9rem;
       overflow-x: auto;
     }
 
     code {
-      background: rgba(125, 249, 255, 0.1);
-      border: 1px solid rgba(125, 249, 255, 0.2);
+      background: rgba(var(--neon-rgb), 0.1);
+      border: 1px solid rgba(var(--neon-rgb), 0.2);
       border-radius: 4px;
       padding: 0.2rem 0.4rem;
-      color: #ff5cf4;
+      color: var(--neon2);
       font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
       font-size: 0.85em;
     }
@@ -100,13 +101,13 @@
   &__features {
     margin-top: 2rem;
     text-align: left;
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--glass);
+    border: 1px solid var(--border);
     border-radius: 8px;
     padding: 1.5rem;
 
     h4 {
-      color: #ff5cf4;
+      color: var(--neon2);
       margin: 0 0 1rem;
       font-size: 1.1rem;
     }
@@ -118,7 +119,7 @@
 
       li {
         padding: 0.5rem 0;
-        color: #9fb3c8;
+        color: var(--text-muted);
         font-size: 0.95rem;
 
         &::before {
@@ -126,12 +127,30 @@
           display: inline-block;
           width: 6px;
           height: 6px;
-          background: #7df9ff;
+          background: var(--neon);
           border-radius: 50%;
           margin-right: 0.75rem;
-          box-shadow: 0 0 4px rgba(125, 249, 255, 0.6);
+          box-shadow: 0 0 4px rgba(var(--neon-rgb), 0.6);
         }
       }
+    }
+  }
+}
+
+[data-theme="light"] {
+  .terminal-fallback {
+    &__content {
+      h3 {
+        text-shadow: none;
+      }
+
+      pre {
+        border-color: var(--border);
+      }
+    }
+
+    &__features ul li::before {
+      box-shadow: none;
     }
   }
 }

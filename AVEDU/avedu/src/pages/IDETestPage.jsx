@@ -2,17 +2,19 @@
 // FILE: src/pages/IDETestPage.jsx
 // Test page for the ROS Visual IDE components (BlockCanvas + FileExplorer)
 // =============================================================
-import React, { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
 import { useNavigate } from "react-router-dom";
 import { BlockCanvas } from "../components/ide/BlockCanvas";
 import { FileExplorer } from "../components/ide/FileExplorer";
 import { TabBar } from "../components/ide/TabBar";
 import { Terminal } from "../components/ide/Terminal";
+import { URDFViewer } from "../components/ide/URDFViewer";
 import { CategorizedPalette } from "../components/blocks";
 import { paletteCategorized } from "../components/blocks";
 import { computeUrdfXml } from "../components/blocks/urdf-helpers";
 import CanvasSelector from "../components/ide/CanvasSelector";
+import ThemeToggle from "../components/ThemeToggle";
 import fileApi from "../services/fileApi";
 import "../styles/_rosflow.scss";
 import "../styles/pages/_ide-test.scss";
@@ -100,32 +102,23 @@ function IDETestPageInner() {
   ]);
   const [activeTab, setActiveTab] = useState("/src/my_robot/urdf/robot.urdf");
   const [showTerminal, setShowTerminal] = useState(false);
-
-  const [logs, setLogs] = useState([
-    { type: "info", message: "🚀 IDE Test Environment Initialized" },
-    { type: "success", message: "✓ BlockCanvas loaded" },
-    { type: "success", message: "✓ FileExplorer loaded" },
-    { type: "info", message: "Drag blocks from the palette to the canvas" },
-  ]);
+  const [fileExplorerCollapsed, setFileExplorerCollapsed] = useState(false);
 
   // Handle canvas selection from CanvasSelector
   const handleCanvasSelect = useCallback(async (selectedCanvas) => {
     try {
       setCanvasLoading(true);
       setCanvas(selectedCanvas);
-      addLog("success", `✓ Loaded canvas: ${selectedCanvas.name}`);
 
       // Load file tree
       const tree = await fileApi.getFileTree(selectedCanvas.id);
       if (tree.length > 0) {
         setFileTree(tree);
-        addLog("success", `✓ Loaded ${tree.length} root items`);
       }
 
       // Hide canvas selector and show IDE
       setShowCanvasSelector(false);
     } catch (error) {
-      addLog("error", `Failed to load canvas: ${error.message}`);
       console.error("Canvas load error:", error);
     } finally {
       setCanvasLoading(false);
@@ -157,14 +150,6 @@ function IDETestPageInner() {
         },
       ];
     });
-
-    addLog("info", `📂 Opened file: ${path}`);
-  }, []);
-
-  // Helper to add logs (defined early so other functions can use it)
-  const addLog = useCallback((type, message) => {
-    const timestamp = new Date().toLocaleTimeString();
-    setLogs((prev) => [...prev, { type, message, timestamp }]);
   }, []);
 
   // Handle graph changes
@@ -178,22 +163,12 @@ function IDETestPageInner() {
     [currentFile]
   );
 
-  // Handle code generation (debounced logging to avoid spam during node dragging)
-  const lastLoggedCodeRef = useRef("");
-  const handleCodeGenerated = useCallback(
-    (result) => {
-      // Handle both object {xml, robotId} and string returns
-      const code = typeof result === 'string' ? result : (result?.xml || "");
-      setGeneratedCode(code);
-
-      // Only log if the code content actually changed (not just node positions)
-      if (code && code !== lastLoggedCodeRef.current) {
-        lastLoggedCodeRef.current = code;
-        addLog("success", `✓ Code updated (${code.length} chars)`);
-      }
-    },
-    [addLog]
-  );
+  // Handle code generation
+  const handleCodeGenerated = useCallback((result) => {
+    // Handle both object {xml, robotId} and string returns
+    const code = typeof result === 'string' ? result : (result?.xml || "");
+    setGeneratedCode(code);
+  }, []);
 
   // File operations
   const handleFileCreate = useCallback(
@@ -201,7 +176,6 @@ function IDETestPageInner() {
       if (!canvas) return;
 
       try {
-        addLog("info", `➕ Creating ${type}: ${path}`);
         await fileApi.createFile(canvas.id, {
           path,
           file_type: type,
@@ -211,9 +185,8 @@ function IDETestPageInner() {
         // Reload file tree
         const tree = await fileApi.getFileTree(canvas.id);
         setFileTree(tree);
-        addLog("success", `✓ Created ${type}: ${path}`);
       } catch (error) {
-        addLog("error", `Failed to create ${type}: ${error.message}`);
+        console.error(`Failed to create ${type}:`, error);
       }
     },
     [canvas]
@@ -226,8 +199,6 @@ function IDETestPageInner() {
       if (!window.confirm(`Delete ${path}?`)) return;
 
       try {
-        addLog("warning", `🗑️ Deleting: ${path}`);
-
         // Find file by path
         const files = await fileApi.listFiles(canvas.id);
         const file = files.find((f) => f.path === path);
@@ -238,12 +209,9 @@ function IDETestPageInner() {
           // Reload file tree
           const tree = await fileApi.getFileTree(canvas.id);
           setFileTree(tree);
-          addLog("success", `✓ Deleted: ${path}`);
-        } else {
-          addLog("error", `File not found: ${path}`);
         }
       } catch (error) {
-        addLog("error", `Failed to delete: ${error.message}`);
+        console.error("Failed to delete:", error);
       }
     },
     [canvas]
@@ -254,8 +222,6 @@ function IDETestPageInner() {
       if (!canvas) return;
 
       try {
-        addLog("info", `✏️ Renaming: ${oldPath} → ${newPath}`);
-
         // Find file by old path
         const files = await fileApi.listFiles(canvas.id);
         const file = files.find((f) => f.path === oldPath);
@@ -266,12 +232,9 @@ function IDETestPageInner() {
           // Reload file tree
           const tree = await fileApi.getFileTree(canvas.id);
           setFileTree(tree);
-          addLog("success", `✓ Renamed: ${oldPath} → ${newPath}`);
-        } else {
-          addLog("error", `File not found: ${oldPath}`);
         }
       } catch (error) {
-        addLog("error", `Failed to rename: ${error.message}`);
+        console.error("Failed to rename:", error);
       }
     },
     [canvas]
@@ -279,31 +242,18 @@ function IDETestPageInner() {
 
   // Save current file
   const handleSave = useCallback(async () => {
-    if (!canvas) {
-      addLog("error", "⚠️ Canvas not loaded");
-      return;
-    }
-
-    if (!generatedCode) {
-      addLog("warning", "⚠️ No code to save");
-      return;
-    }
-
-    if (!currentFile) {
-      addLog("warning", "⚠️ No file selected");
+    if (!canvas || !generatedCode || !currentFile) {
       return;
     }
 
     try {
-      addLog("info", `💾 Saving ${currentFile}...`);
       await fileApi.saveGeneratedCode(canvas.id, currentFile, generatedCode);
-      addLog("success", `✓ Saved ${currentFile} (${generatedCode.length} chars)`);
 
       // Reload file tree to reflect changes
       const tree = await fileApi.getFileTree(canvas.id);
       setFileTree(tree);
     } catch (error) {
-      addLog("error", `Failed to save: ${error.message}`);
+      console.error("Failed to save:", error);
     }
   }, [canvas, currentFile, generatedCode]);
 
@@ -315,7 +265,6 @@ function IDETestPageInner() {
         [currentFile]: { nodes: [], edges: [] },
       }));
       setGeneratedCode("");
-      addLog("info", "🧹 Canvas cleared");
     }
   }, [currentFile]);
 
@@ -324,12 +273,10 @@ function IDETestPageInner() {
     if (path === "terminal") {
       setShowTerminal(true);
       setActiveTab("terminal");
-      addLog("info", "📟 Opened terminal");
     } else {
       setShowTerminal(false);
       setActiveTab(path);
       setCurrentFile(path);
-      addLog("info", `📂 Switched to: ${path}`);
     }
   }, []);
 
@@ -349,7 +296,6 @@ function IDETestPageInner() {
         setShowTerminal(false);
       }
 
-      addLog("info", `✕ Closed: ${path.split("/").pop()}`);
       return filtered;
     });
   }, [activeTab]);
@@ -362,7 +308,6 @@ function IDETestPageInner() {
         setActiveTab(lastFileTab.path);
         setCurrentFile(lastFileTab.path);
       }
-      addLog("info", "✕ Closed terminal");
     } else {
       setShowTerminal(true);
       setActiveTab("terminal");
@@ -372,19 +317,14 @@ function IDETestPageInner() {
         if (prev.some((tab) => tab.path === "terminal")) return prev;
         return [...prev, { path: "terminal", name: "Terminal", type: "terminal", unsaved: false }];
       });
-
-      addLog("info", "📟 Opened terminal");
     }
   }, [showTerminal, openTabs]);
 
   const handleCommandExecute = useCallback(async (command, callback) => {
     if (!canvas) {
       callback?.("Error: Canvas not loaded");
-      addLog("error", "Canvas not loaded");
       return;
     }
-
-    addLog("info", `$ ${command}`);
 
     try {
       const result = await fileApi.executeCommand(canvas.id, command);
@@ -396,15 +336,8 @@ function IDETestPageInner() {
       if (result.error) {
         callback?.(`\x1b[31m${result.error}\x1b[0m`); // Red color for errors
       }
-
-      if (result.exit_code === 0) {
-        addLog("success", `✓ Command executed successfully`);
-      } else {
-        addLog("warning", `Command exited with code ${result.exit_code}`);
-      }
     } catch (error) {
       callback?.(`Error: ${error.message}`);
-      addLog("error", `Failed to execute command: ${error.message}`);
     }
   }, [canvas]);
 
@@ -447,22 +380,35 @@ function IDETestPageInner() {
           <button className="btn btn--small btn--primary" onClick={handleSave}>
             💾 Save
           </button>
+          <ThemeToggle />
         </div>
       </header>
 
       {/* Main Layout */}
-      <div className="ide-test__layout">
+      <div className={`ide-test__layout ${fileExplorerCollapsed ? 'ide-test__layout--collapsed' : ''}`}>
         {/* Left Sidebar - File Explorer */}
-        <aside className="ide-test__explorer">
-          <FileExplorer
-            files={fileTree}
-            currentFile={currentFile}
-            onFileSelect={handleFileSelect}
-            onFileCreate={handleFileCreate}
-            onFileDelete={handleFileDelete}
-            onFileRename={handleFileRename}
-            loading={canvasLoading}
-          />
+        <aside className={`ide-test__explorer ${fileExplorerCollapsed ? 'ide-test__explorer--collapsed' : ''}`}>
+          <div className="ide-test__explorer-header">
+            <span className="ide-test__explorer-title">FILES</span>
+            <button
+              className="ide-test__explorer-toggle"
+              onClick={() => setFileExplorerCollapsed(!fileExplorerCollapsed)}
+              title={fileExplorerCollapsed ? "Expand file explorer" : "Collapse file explorer"}
+            >
+              {fileExplorerCollapsed ? '▶' : '◀'}
+            </button>
+          </div>
+          {!fileExplorerCollapsed && (
+            <FileExplorer
+              files={fileTree}
+              currentFile={currentFile}
+              onFileSelect={handleFileSelect}
+              onFileCreate={handleFileCreate}
+              onFileDelete={handleFileDelete}
+              onFileRename={handleFileRename}
+              loading={canvasLoading}
+            />
+          )}
         </aside>
 
         {/* Center - Canvas with Palette on Top */}
@@ -501,6 +447,7 @@ function IDETestPageInner() {
                 codeGenerator={computeUrdfXml}
                 onCodeGenerated={handleCodeGenerated}
                 readOnly={false}
+                canvasId={canvas?.id}
               />
             ) : (
               <div className="ide-test__empty">
@@ -511,8 +458,13 @@ function IDETestPageInner() {
           </div>
         </main>
 
-        {/* Right Sidebar - Code Preview & Logs */}
+        {/* Right Sidebar - URDF Viewer & Code Preview */}
         <aside className="ide-test__sidebar">
+          {/* URDF Viewer */}
+          <div className="ide-test__urdf-viewer">
+            <URDFViewer xmlCode={generatedCode} />
+          </div>
+
           {/* Generated Code */}
           <div className="ide-test__code">
             <div className="ide-test__code-header">
@@ -521,7 +473,6 @@ function IDETestPageInner() {
                 className="ide-test__code-copy"
                 onClick={() => {
                   navigator.clipboard.writeText(generatedCode);
-                  addLog("success", "📋 Code copied to clipboard");
                 }}
                 disabled={!generatedCode}
               >
@@ -531,32 +482,6 @@ function IDETestPageInner() {
             <pre className="ide-test__code-content">
               {generatedCode || "// No code generated yet\n// Drag blocks to canvas to generate code"}
             </pre>
-          </div>
-
-          {/* Logs */}
-          <div className="ide-test__logs">
-            <div className="ide-test__logs-header">
-              <span className="ide-test__logs-title">Console</span>
-              <button
-                className="ide-test__logs-clear"
-                onClick={() => {
-                  setLogs([]);
-                  addLog("info", "🧹 Console cleared");
-                }}
-              >
-                Clear
-              </button>
-            </div>
-            <div className="ide-test__logs-content">
-              {logs.map((log, i) => (
-                <div key={i} className={`ide-test__log ide-test__log--${log.type}`}>
-                  {log.timestamp && (
-                    <span className="ide-test__log-time">[{log.timestamp}]</span>
-                  )}
-                  <span className="ide-test__log-message">{log.message}</span>
-                </div>
-              ))}
-            </div>
           </div>
         </aside>
       </div>

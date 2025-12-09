@@ -5,6 +5,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import ThemeToggle from "../components/ThemeToggle";
 import "../styles/pages/_home.scss";
 
 export default function Home() {
@@ -32,6 +33,11 @@ export default function Home() {
       <div className="stars" aria-hidden />
       <div className="stars stars--2" aria-hidden />
       <div className="stars stars--3" aria-hidden />
+
+      {/* Theme Toggle */}
+      <div style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 100 }}>
+        <ThemeToggle />
+      </div>
 
       <main className="content">
         <h1 className="title">
