@@ -33,11 +33,13 @@ FROM deps AS builder
 COPY avedu/ ./
 
 # Build arguments for configuration
-ARG REACT_APP_API_BASE=/api
+ARG REACT_APP_API_BASE=/lad/api
 ARG REACT_APP_HOST=localhost
+ARG PUBLIC_URL=/lad
 
 ENV REACT_APP_API_BASE=$REACT_APP_API_BASE
 ENV REACT_APP_HOST=$REACT_APP_HOST
+ENV PUBLIC_URL=$PUBLIC_URL
 
 # Build the production bundle
 RUN npm run build
