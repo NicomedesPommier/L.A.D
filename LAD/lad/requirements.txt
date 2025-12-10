@@ -11,6 +11,7 @@ PyJWT==2.10.0
 # Python utilities
 python-dateutil==2.9.0.post0
 pytz==2024.2
+requests==2.31.0
 
 # Database (SQLite is included with Python)
 # For PostgreSQL in production, add: psycopg2-binary==2.9.9
