@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import URDFLoader from 'urdf-loader';
 import ROSLIB from "roslib";
+import { ROS_STATIC_BASE, ROS_WS_URL } from '../config';
 
 
 // --- Fuerza Z-up en la cámara/controles
@@ -53,13 +54,13 @@ function RobotModel() {
     // Reescribe rutas relativas al server del contenedor
     const manager = new THREE.LoadingManager();
     manager.setURLModifier((url) => {
-      if (url.startsWith('/qcar_description/')) return `http://localhost:7000${url}`;
+      if (url.startsWith('/qcar_description/')) return `${ROS_STATIC_BASE}${url}`;
       return url;
     });
 
     const loader = new URDFLoader(manager);
     loader.load(
-      'http://localhost:7000/qcar_description/urdf/robot_runtime.urdf',
+      `${ROS_STATIC_BASE}/qcar_description/urdf/robot_runtime.urdf`,
       (urdf) => {
         urdf.scale.set(1, 1, 1);
         urdf.frustumCulled = false;
@@ -67,7 +68,7 @@ function RobotModel() {
         setRobot(urdf);
 
         // === (Opcional) TF en vivo ===
-         const ros = new ROSLIB.Ros({ url: 'ws://localhost:9090' });
+         const ros = new ROSLIB.Ros({ url: ROS_WS_URL });
          const tfClient = new ROSLIB.TFClient({
            ros, fixedFrame: 'base', angularThres: 0.001, transThres: 0.001, rate: 10
          });
@@ -83,7 +84,7 @@ function RobotModel() {
       },
       undefined,
       (err) => console.error('URDF error:', err),
-      { packages: { qcar_description: 'http://localhost:7000/qcar_description' } }
+      { packages: { qcar_description: `${ROS_STATIC_BASE}/qcar_description` } }
     );
   }, []);
 
