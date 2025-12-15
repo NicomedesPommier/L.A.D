@@ -33,9 +33,11 @@ FROM deps AS builder
 COPY avedu/ ./
 
 # Build arguments for configuration
-ARG REACT_APP_API_BASE=/lad/api
+# Defaults are for local development (direct port access)
+# For Kubernetes, pass: --build-arg PUBLIC_URL=/lad --build-arg REACT_APP_API_BASE=/lad/api
+ARG REACT_APP_API_BASE=/api
 ARG REACT_APP_HOST=localhost
-ARG PUBLIC_URL=/lad
+ARG PUBLIC_URL=/
 
 ENV REACT_APP_API_BASE=$REACT_APP_API_BASE
 ENV REACT_APP_HOST=$REACT_APP_HOST

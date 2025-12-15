@@ -43,6 +43,9 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/lad-frontend:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/lad-frontend:${{ github.sha }}
+          build-args: |
+            PUBLIC_URL=/lad
+            REACT_APP_API_BASE=/lad/api
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
