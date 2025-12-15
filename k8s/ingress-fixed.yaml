@@ -18,7 +18,7 @@ spec:
     - http:
         paths:
           # ROSBridge WebSocket - rewrite /lad/rosbridge to /
-          - path: /lad/(rosbridge)(.*)
+          - path: /lad/rosbridge()(.*)
             pathType: ImplementationSpecific
             backend:
               service:
