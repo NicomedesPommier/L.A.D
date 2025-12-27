@@ -321,21 +321,33 @@ class WorkspaceFileViewSet(viewsets.ModelViewSet):
         canvas = get_object_or_404(
             Canvas, id=canvas_id, user=self.request.user
         )
-        file_instance = serializer.save(canvas=canvas)
 
-        # Write to Docker volume
-        self._write_to_docker(file_instance)
+        try:
+            file_instance = serializer.save(canvas=canvas)
 
-        # Invalidate file tree cache
-        self._invalidate_file_tree_cache(canvas_id)
+            # Write to Docker volume
+            self._write_to_docker(file_instance)
+
+            # Invalidate file tree cache
+            self._invalidate_file_tree_cache(canvas_id)
+        except Exception as e:
+            # If Docker write fails, delete the database entry
+            if 'file_instance' in locals():
+                file_instance.delete()
+            print(f"[WorkspaceFile] Create failed: {str(e)}")
+            raise
 
     def perform_update(self, serializer):
-        file_instance = serializer.save()
-        # Update Docker file
-        self._write_to_docker(file_instance)
+        try:
+            file_instance = serializer.save()
+            # Update Docker file
+            self._write_to_docker(file_instance)
 
-        # Invalidate file tree cache
-        self._invalidate_file_tree_cache(file_instance.canvas_id)
+            # Invalidate file tree cache
+            self._invalidate_file_tree_cache(file_instance.canvas_id)
+        except Exception as e:
+            print(f"[WorkspaceFile] Update failed: {str(e)}")
+            raise
 
     def perform_destroy(self, instance):
         canvas_id = instance.canvas_id
@@ -431,10 +443,11 @@ class WorkspaceFileViewSet(viewsets.ModelViewSet):
             )
 
             if file_instance.file_type == WorkspaceFile.FILE:
-                # Write file content
+                # Write file content (handle None or empty content)
+                content = file_instance.content if file_instance.content is not None else ""
                 subprocess.run(
                     ["docker", "exec", "-i", DOCKER_CONTAINER, "tee", docker_path],
-                    input=file_instance.content.encode(),
+                    input=content.encode(),
                     check=True,
                     capture_output=True
                 )
@@ -446,7 +459,12 @@ class WorkspaceFileViewSet(viewsets.ModelViewSet):
                     capture_output=True
                 )
         except subprocess.CalledProcessError as e:
-            print(f"Error writing to Docker: {e.stderr.decode() if e.stderr else str(e)}")
+            error_msg = e.stderr.decode() if e.stderr else str(e)
+            print(f"Error writing to Docker: {error_msg}")
+            raise Exception(f"Failed to write to Docker: {error_msg}")
+        except Exception as e:
+            print(f"Unexpected error in _write_to_docker: {str(e)}")
+            raise
 
     def _delete_from_docker(self, file_instance):
         """Delete file from Docker volume using docker exec"""

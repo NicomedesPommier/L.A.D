@@ -5,6 +5,7 @@ import CreatePackageNode from "./CreatePackageNode";
 import RosRunNode from "./RosRunNode";
 import RosPublisherNode from "./RosPublisherNode";
 import RosSubscriberNode from "./RosSubscriberNode";
+import LidarVisualizerNode from "./LidarVisualizerNode";
 import StringNode from "./StringNode";
 import ListItemsNode from "./ListItemsNode";
 import ConvertToCodeNode from "./ConvertToCodeNode";
@@ -38,6 +39,7 @@ export const nodeTypes = {
   rosRun: RosRunNode,
   rosPublisher: RosPublisherNode,
   rosSubscriber: RosSubscriberNode,
+  lidarVisualizer: LidarVisualizerNode,
   string: StringNode,
   text: StringNode, // Alias for generic text node
   listArgs: ListItemsNode,
@@ -135,6 +137,7 @@ export const paletteCategorized = {
     { type: "urdfXmlPreview", label: "XML Preview" },
   ],
   Visualization: [
+    { type: "lidarVisualizer", label: "LIDAR Visualizer" },
     { type: "urdfViewer", label: "URDF 3D Viewer" },
     { type: "urdfControl", label: "Joint Controller" },
   ],
@@ -196,6 +199,13 @@ export function defaultDataFor(typeOrPreset) {
       queueSize: "10",
       lastMessage: "",
       expanded: true,
+    };
+
+  if (typeOrPreset === "lidarVisualizer")
+    return {
+      topicName: "/scan",
+      showGrid: true,
+      maxRange: 10.0,
     };
 
   // -------- nuevos URDF --------

@@ -27,7 +27,8 @@
       "Bash(docker ps:*)",
       "Bash(cat:*)",
       "Bash(taskkill /F /PID 10360)",
-      "Bash(taskkill:*)"
+      "Bash(taskkill:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []

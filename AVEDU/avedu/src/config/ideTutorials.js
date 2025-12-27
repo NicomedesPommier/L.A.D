@@ -385,9 +385,209 @@ export const createSubscriberTutorial = [
   },
 ];
 
+/**
+ * Tutorial for Creating LIDAR Subscriber
+ * Guides user through subscribing to QCar LIDAR sensor data
+ */
+export const createLidarSubscriberTutorial = [
+  {
+    title: "Subscribing to LIDAR Sensor Data 🎯",
+    text: "The QCar has a 360° LIDAR sensor that publishes distance measurements. You'll create a subscriber to receive this data and detect obstacles!",
+    position: "center",
+    target: null,
+    buttonText: "Start Tutorial",
+  },
+  {
+    title: "Understanding LIDAR Data",
+    text: "LIDAR publishes to the /scan topic using the sensor_msgs/LaserScan message type. This includes arrays of distance measurements, angle information, and timing data.",
+    position: "center",
+    target: null,
+    buttonText: "Next",
+  },
+  {
+    title: "Create LIDAR Subscriber Node",
+    text: "Navigate to the ROS2 tab and drag a Subscriber block to the canvas. We'll configure it to listen to the LIDAR sensor.",
+    position: "right",
+    target: ".categorized-palette__block[data-type='rosSubscriber']",
+    offset: 20,
+    tip: "Drag the Subscriber block to the canvas",
+  },
+  {
+    title: "Configure Topic Name",
+    text: "Set the topic name to '/scan'. This is where the QCar LIDAR publishes its sensor data.",
+    position: "left",
+    target: ".ros-subscriber-node input[placeholder='/chatter']",
+    offset: 20,
+    tip: "Enter: /scan",
+  },
+  {
+    title: "Select Message Type",
+    text: "Choose 'sensor_msgs/LaserScan' as the message type. This is the standard ROS2 message for LIDAR data containing range measurements.",
+    position: "left",
+    target: ".ros-subscriber-node__grid-2",
+    offset: 20,
+    warning: "Must use LaserScan for LIDAR data!",
+  },
+  {
+    title: "Name Your Node",
+    text: "Name your subscriber something like 'lidar_subscriber' or 'obstacle_detector'. This will be the node name shown in ROS2.",
+    position: "left",
+    target: ".ros-subscriber-node input[type='text']",
+    offset: 20,
+  },
+  {
+    title: "Generate Code",
+    text: "Connect the subscriber to a 'Convert to Code' block to generate the Python node. The code will include callback handling for LaserScan messages.",
+    position: "top",
+    target: ".rf-node[data-type='rosSubscriber'] .react-flow__handle-right",
+    offset: 20,
+  },
+  {
+    title: "Processing LIDAR Data",
+    text: "The generated callback receives a LaserScan message. You can access: msg.ranges (distance array), msg.angle_min/max (scan angles), and msg.range_min/max (distance limits).",
+    position: "center",
+    target: null,
+    buttonText: "Understand",
+  },
+  {
+    title: "Find Closest Obstacle",
+    text: "In the callback, you can use min(msg.ranges) to find the closest obstacle distance. Add logic to warn if something is closer than 0.5 meters!",
+    position: "top",
+    target: ".terminal",
+    offset: 30,
+    tip: "Add: if min(msg.ranges) < 0.5: self.get_logger().warn('Obstacle detected!')",
+  },
+  {
+    title: "Build and Test",
+    text: "Save the file, build your package with 'colcon build', source the workspace, and run your node. If the QCar LIDAR is active, you'll see real-time distance data!",
+    position: "top",
+    target: ".terminal",
+    offset: 30,
+    tip: "Run: ros2 run your_pkg lidar_subscriber",
+  },
+  {
+    title: "Visualize in RViz2",
+    text: "Open RViz2 and add a LaserScan display with topic '/scan' to see the LIDAR data visually. You'll see a point cloud representing obstacles around the QCar!",
+    position: "center",
+    target: null,
+    buttonText: "Got it!",
+  },
+  {
+    title: "LIDAR Subscriber Complete! 🎉",
+    text: "You've successfully subscribed to the QCar LIDAR sensor! Try processing the data to detect obstacles in specific directions or calculate safe navigation zones.",
+    position: "center",
+    target: null,
+    buttonText: "Finish",
+  },
+];
+
+/**
+ * Tutorial for Creating Camera Subscriber
+ * Guides user through subscribing to QCar camera feeds
+ */
+export const createCameraSubscriberTutorial = [
+  {
+    title: "Subscribing to Camera Data 📷",
+    text: "The QCar has 5 cameras: 1 RGB camera and 4 CSI cameras (front, right, back, left). You'll create a subscriber to receive and process camera images!",
+    position: "center",
+    target: null,
+    buttonText: "Let's Start",
+  },
+  {
+    title: "QCar Camera Topics",
+    text: "Camera topics: /camera/image_raw (RGB), /camera/csi_front/image_raw, /camera/csi_right/image_raw, /camera/csi_back/image_raw, /camera/csi_left/image_raw. All use sensor_msgs/Image message type.",
+    position: "center",
+    target: null,
+    buttonText: "Next",
+  },
+  {
+    title: "Create Camera Subscriber",
+    text: "Drag a Subscriber block from the ROS2 tab. We'll configure it to receive images from the front camera.",
+    position: "right",
+    target: ".categorized-palette__block[data-type='rosSubscriber']",
+    offset: 20,
+    tip: "Drag Subscriber to canvas",
+  },
+  {
+    title: "Set Camera Topic",
+    text: "Set the topic to '/camera/csi_front/image_raw' to subscribe to the front camera. You can create separate subscribers for each camera if needed!",
+    position: "left",
+    target: ".ros-subscriber-node input[placeholder='/chatter']",
+    offset: 20,
+    tip: "Enter: /camera/csi_front/image_raw",
+  },
+  {
+    title: "Select Image Message Type",
+    text: "Choose 'sensor_msgs/Image' as the message type. This contains the image data, encoding format, dimensions, and timestamp.",
+    position: "left",
+    target: ".ros-subscriber-node__grid-2",
+    offset: 20,
+  },
+  {
+    title: "Name Your Camera Node",
+    text: "Name it something like 'camera_subscriber' or 'front_camera_listener'. This helps identify which camera feed you're processing.",
+    position: "left",
+    target: ".ros-subscriber-node input[type='text']",
+    offset: 20,
+  },
+  {
+    title: "Generate Camera Subscriber Code",
+    text: "Connect to 'Convert to Code' to generate the subscriber. The callback will receive Image messages with pixel data.",
+    position: "top",
+    target: ".rf-node[data-type='rosSubscriber'] .react-flow__handle-right",
+    offset: 20,
+  },
+  {
+    title: "Process Image Data",
+    text: "The Image message contains: msg.width, msg.height, msg.encoding (RGB8, BGR8, etc.), and msg.data (raw pixel array). You can log image dimensions to verify it's working!",
+    position: "center",
+    target: null,
+    buttonText: "Understand",
+  },
+  {
+    title: "Optional: Use cv_bridge",
+    text: "For image processing, install cv_bridge to convert ROS Images to OpenCV format. Add 'from cv_bridge import CvBridge' and use bridge.imgmsg_to_cv2(msg) in your callback.",
+    position: "center",
+    target: null,
+    buttonText: "Good to know",
+    warning: "Requires: pip install opencv-python",
+  },
+  {
+    title: "Build and Run",
+    text: "Build your package, source the workspace, and run the camera subscriber. If the camera is publishing, you'll see image messages arriving!",
+    position: "top",
+    target: ".terminal",
+    offset: 30,
+    tip: "Run: ros2 run your_pkg camera_subscriber",
+  },
+  {
+    title: "Visualize with rqt_image_view",
+    text: "To see the camera feed visually, run 'ros2 run rqt_image_view rqt_image_view' and select your camera topic. You'll see live video from the QCar!",
+    position: "center",
+    target: null,
+    buttonText: "Try it!",
+  },
+  {
+    title: "Monitor Multiple Cameras",
+    text: "You can create multiple subscribers (one for each camera) in the same node, or create separate nodes for each camera feed. Great for 360° visual awareness!",
+    position: "center",
+    target: null,
+    buttonText: "Interesting!",
+  },
+  {
+    title: "Camera Subscriber Complete! 🎉",
+    text: "You're now receiving camera data from the QCar! Next, try processing images for lane detection, object recognition, or motion detection.",
+    position: "center",
+    target: null,
+    buttonText: "Finish Tutorial",
+  },
+];
+
 // Export all tutorials
 export default {
   createPackage: createPackageTutorial,
   createPublisher: createPublisherTutorial,
   createSubscriber: createSubscriberTutorial,
+  createLidarSubscriber: createLidarSubscriberTutorial,
+  createCameraSubscriber: createCameraSubscriberTutorial,
 };

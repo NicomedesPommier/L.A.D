@@ -25,6 +25,11 @@ import Ros2NodesIntro from "../levels/Ros2NodesIntro";
 import Ros2Topics from "../levels/Ros2Topics";
 import Ros2Subscriptions from "../levels/Ros2Subscriptions";
 import Ros2MiniGames from "../levels/Ros2MiniGames";
+// Sensing Unit Levels
+import SensingIntegration from "../levels/SensingIntegration";
+import SensingSubscribe from "../levels/SensingSubscribe";
+import SensingVisualization from "../levels/SensingVisualization";
+import SensingTasks from "../levels/SensingTasks";
 
 const DEBUG = true;
 
@@ -47,6 +52,11 @@ const REGISTRY = Object.freeze({
   "ros2-topics": Ros2Topics,
   "ros2-subscriptions": Ros2Subscriptions,
   "ros2-mini-games": Ros2MiniGames,
+  // Sensing Unit Levels
+  "sensing-integration": SensingIntegration,
+  "sensing-subscribe": SensingSubscribe,
+  "sensing-visualization": SensingVisualization,
+  "sensing-tasks": SensingTasks,
 });
 
 export default function LearnLevel() {

@@ -234,6 +234,41 @@ if __name__ == '__main__':
 }
 
 /**
+ * Generate ros2 run command from RosRunNode data
+ */
+function buildRosRunCmd(rosRunData) {
+  if (!rosRunData) return "";
+
+  const {
+    pkg = "",
+    exe = "",
+    ns = "",
+    args = []
+  } = rosRunData;
+
+  if (!pkg || !exe) {
+    return "# ros2 run requires package and executable names";
+  }
+
+  let cmd = `ros2 run ${pkg} ${exe}`;
+
+  // Add namespace if provided
+  if (ns && ns.trim()) {
+    cmd += ` --ros-args -r __ns:=${ns.trim()}`;
+  }
+
+  // Add additional arguments if provided
+  if (Array.isArray(args) && args.length > 0) {
+    const argsStr = args.join(" ");
+    if (argsStr.trim()) {
+      cmd += ` ${argsStr.trim()}`;
+    }
+  }
+
+  return cmd;
+}
+
+/**
  * Sync toCode node previews with generated commands/code from connected nodes
  * Similar to syncUrdfDerived and syncJointStates in urdf-helpers.js
  */
@@ -279,6 +314,15 @@ export function syncRos2Commands(nodes, edges, setNodes) {
 
     if (subscriberNode) {
       newPreview = generateSubscriberCode(subscriberNode.data);
+    }
+
+    // Check for connected rosRun node
+    const rosRunNode = incomingEdges
+      .map((e) => nodes.find((n) => n.id === e.source))
+      .find((n) => n && n.type === "rosRun");
+
+    if (rosRunNode) {
+      newPreview = buildRosRunCmd(rosRunNode.data);
     }
 
     const currentPreview = toCodeNode.data?.preview || "";
