@@ -55,6 +55,28 @@ export function LidarVisualizer({ canvasId, isVisible }) {
           if (message.op === "publish" && message.topic === topicName) {
             const msg = message.msg;
 
+            // Check for valid ranges
+            const validRanges = msg.ranges?.filter(r =>
+              !isNaN(r) && isFinite(r) && r >= msg.range_min && r <= msg.range_max
+            );
+            const infinityCount = msg.ranges?.filter(r => r === Infinity || r === -Infinity).length;
+            const nanCount = msg.ranges?.filter(r => isNaN(r)).length;
+
+            console.log("[LIDAR Visualizer] Received scan:", {
+              topic: topicName,
+              ranges_count: msg.ranges?.length,
+              valid_ranges: validRanges?.length,
+              infinity_count: infinityCount,
+              nan_count: nanCount,
+              angle_min: msg.angle_min,
+              angle_max: msg.angle_max,
+              angle_increment: msg.angle_increment,
+              range_min: msg.range_min,
+              range_max: msg.range_max,
+              sample_ranges: msg.ranges?.slice(0, 10),
+              sample_valid_ranges: validRanges?.slice(0, 10)
+            });
+
             const newScan = {
               ranges: msg.ranges,
               angle_min: msg.angle_min,
@@ -76,10 +98,18 @@ export function LidarVisualizer({ canvasId, isVisible }) {
             // Count total valid points across all scans in history
             const totalPoints = scanHistoryRef.current.reduce((sum, scan) => {
               const validPoints = scan.ranges.filter(r =>
-                !isNaN(r) && r >= scan.range_min && r <= scan.range_max
+                !isNaN(r) && isFinite(r) && r >= scan.range_min && r <= scan.range_max
               ).length;
               return sum + validPoints;
             }, 0);
+
+            console.log("[LIDAR Visualizer] Stats:", {
+              scans_buffered: scanHistoryRef.current.length,
+              total_points: totalPoints,
+              valid_points_this_scan: newScan.ranges.filter(r =>
+                !isNaN(r) && isFinite(r) && r >= newScan.range_min && r <= newScan.range_max
+              ).length
+            });
 
             setStats(prev => ({
               messagesReceived: prev.messagesReceived + 1,
@@ -187,6 +217,16 @@ export function LidarVisualizer({ canvasId, isVisible }) {
     const scans = scanHistoryRef.current;
     const numScans = scans.length;
 
+    console.log("[LIDAR Visualizer] Drawing scans:", {
+      num_scans: numScans,
+      canvas_size: { width, height },
+      center: { centerX, centerY },
+      scale,
+      maxRange
+    });
+
+    let totalPointsDrawn = 0;
+
     // Draw older scans first (with more transparency) and newer scans on top
     for (let scanIndex = 0; scanIndex < numScans; scanIndex++) {
       const scan = scans[scanIndex];
@@ -196,11 +236,13 @@ export function LidarVisualizer({ canvasId, isVisible }) {
       const age = numScans - scanIndex;
       const opacity = 0.3 + (scanIndex / numScans) * 0.7; // Range from 0.3 to 1.0
 
+      let pointsInThisScan = 0;
+
       for (let i = 0; i < ranges.length; i++) {
         const range = ranges[i];
 
-        // Skip invalid readings
-        if (isNaN(range) || range < scan.range_min || range > scan.range_max) {
+        // Skip invalid readings (NaN, Infinity, or out of bounds)
+        if (isNaN(range) || !isFinite(range) || range < scan.range_min || range > scan.range_max) {
           continue;
         }
 
@@ -217,8 +259,28 @@ export function LidarVisualizer({ canvasId, isVisible }) {
         ctx.beginPath();
         ctx.arc(x, y, 2, 0, 2 * Math.PI);
         ctx.fill();
+
+        pointsInThisScan++;
+        totalPointsDrawn++;
+      }
+
+      if (scanIndex === 0) {
+        console.log("[LIDAR Visualizer] First scan details:", {
+          angle_min,
+          angle_increment,
+          total_ranges: ranges.length,
+          points_drawn: pointsInThisScan,
+          sample_point: {
+            range: ranges[0],
+            angle: angle_min,
+            x: centerX + Math.cos(angle_min) * ranges[0] * scale,
+            y: centerY + Math.sin(angle_min) * ranges[0] * scale
+          }
+        });
       }
     }
+
+    console.log("[LIDAR Visualizer] Total points drawn:", totalPointsDrawn);
 
     // Draw robot center
     ctx.fillStyle = "rgba(255, 95, 244, 0.9)";
