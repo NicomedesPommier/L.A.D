@@ -6,11 +6,7 @@
 name: Build and Push Docker Images
 
 on:
-  push:
-    branches:
-      - main
-      - master
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch:  # Manual trigger only
 
 env:
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
