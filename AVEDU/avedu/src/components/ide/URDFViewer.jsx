@@ -7,6 +7,7 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Grid } from "@react-three/drei";
 import * as THREE from "three";
 import URDFLoader from "urdf-loader";
+import { API_BASE } from "../../config";
 import "../../styles/components/_urdf-viewer.scss";
 
 /**
@@ -83,10 +84,10 @@ function RobotFromXml({ xmlCode, onError }) {
 
     // Configure package path resolution
     // Convert package://workspace_{canvas_id}/meshes/{filename}
-    // to http://localhost:8000/api/workspace/workspace_{canvas_id}/meshes/{filename}
+    // to {API_BASE}/workspace/workspace_{canvas_id}/meshes/{filename}
     loader.packages = (packageName) => {
       // packageName will be like "workspace_a589995b-ae6b-4475-a228-34df4e2cd57a"
-      return `http://localhost:8000/api/workspace/${packageName}`;
+      return `${API_BASE}/workspace/${packageName}`;
     };
 
     try {
