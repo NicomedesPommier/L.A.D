@@ -562,6 +562,130 @@ Student Device 3 (1.1.1.103) → http://1.1.1.100:3000
 
 ---
 
+## ☸️ Kubernetes Deployment
+
+For production or multi-user deployments, L.A.D. can be deployed to a Kubernetes cluster.
+
+### Prerequisites
+
+- **kubectl** configured with cluster access
+- **Docker Hub account** (or other container registry)
+- **Kubernetes cluster** with nginx ingress controller
+
+### Building and Pushing Docker Images
+
+**Backend:**
+```bash
+cd LAD
+docker build -t YOUR_DOCKERHUB_USERNAME/lad-backend:latest .
+docker push YOUR_DOCKERHUB_USERNAME/lad-backend:latest
+```
+
+**Frontend** (with K8s ingress paths):
+```bash
+cd AVEDU
+docker build \
+  --build-arg PUBLIC_URL=/lad \
+  --build-arg REACT_APP_API_BASE=/lad/api \
+  -t YOUR_DOCKERHUB_USERNAME/lad-frontend:latest \
+  .
+docker push YOUR_DOCKERHUB_USERNAME/lad-frontend:latest
+```
+
+**ROS** (takes longer ~15-30 min):
+```bash
+cd qcar_docker
+docker build -t YOUR_DOCKERHUB_USERNAME/lad-ros:latest .
+docker push YOUR_DOCKERHUB_USERNAME/lad-ros:latest
+```
+
+### Deploying to Kubernetes
+
+```bash
+# Apply K8s manifests
+kubectl apply -f k8s/
+
+# Check pod status
+kubectl get pods -n lad
+
+# Watch pods start
+kubectl get pods -n lad -w
+```
+
+### Managing Pods
+
+**Restart deployments** (to pull new images):
+```bash
+kubectl rollout restart deployment/lad-frontend -n lad
+kubectl rollout restart deployment/lad-backend -n lad
+kubectl rollout restart deployment/lad-ros -n lad
+```
+
+**View logs:**
+```bash
+# Backend logs
+kubectl logs -n lad deployment/lad-backend --tail=100
+
+# Follow logs in real-time
+kubectl logs -n lad deployment/lad-backend -f
+
+# Frontend logs
+kubectl logs -n lad deployment/lad-frontend -f
+```
+
+**Shell into a pod:**
+```bash
+kubectl exec -it -n lad deployment/lad-backend -- /bin/bash
+```
+
+**Run Django commands:**
+```bash
+# Load fixtures
+kubectl exec -n lad deployment/lad-backend -- python manage.py loaddata fixtures/curriculum_data.json
+
+# Create superuser
+kubectl exec -it -n lad deployment/lad-backend -- python manage.py createsuperuser
+
+# Run migrations
+kubectl exec -n lad deployment/lad-backend -- python manage.py migrate
+```
+
+### Volume Issues
+
+If pods get stuck in `ContainerCreating` with volume errors:
+```bash
+# Scale down to release volumes
+kubectl scale deployment/lad-backend -n lad --replicas=0
+
+# Wait, then scale back up
+kubectl scale deployment/lad-backend -n lad --replicas=1
+```
+
+### Environment Variables
+
+The backend entrypoint automatically:
+- Runs migrations
+- Collects static files
+- Loads fixtures if database is empty
+
+Configure fixture file via environment variable:
+```yaml
+env:
+  - name: FIXTURE_FILE
+    value: "fixtures/curriculum_data.json"  # Default
+```
+
+### Ingress Configuration
+
+The application is accessible at `/lad/` path:
+- Frontend: `http://your-cluster/lad/`
+- API: `http://your-cluster/lad/api/`
+- Admin: `http://your-cluster/lad/admin/`
+- ROSBridge: `ws://your-cluster/lad/rosbridge`
+- ROS Static: `http://your-cluster/lad/ros-static/`
+
+---
+
 ## 🧪 Development
 
 ### Running Tests

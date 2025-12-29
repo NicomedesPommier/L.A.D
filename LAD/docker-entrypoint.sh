@@ -22,6 +22,8 @@ echo "Collecting static files..."
 python manage.py collectstatic --noinput
 
 # Load initial data if database is empty
+# Use FIXTURE_FILE env var to customize, defaults to curriculum_data.json
+FIXTURE_FILE="${FIXTURE_FILE:-fixtures/curriculum_data.json}"
 echo "Checking for initial data..."
 python manage.py shell -c "
 from django.contrib.auth.models import User
@@ -29,7 +31,7 @@ from apps.learning.models import Unit
 if not Unit.objects.exists():
     print('Loading initial fixtures...')
     import subprocess
-    subprocess.run(['python', 'manage.py', 'loaddata', 'fixtures/initial_data.json'], check=False)
+    subprocess.run(['python', 'manage.py', 'loaddata', '${FIXTURE_FILE}'], check=False)
 else:
     print('Data already exists, skipping fixtures.')
 "
