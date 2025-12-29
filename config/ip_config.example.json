@@ -1,0 +1,8 @@
+{
+  "exposed_ip": "192.168.1.100",
+  "frontend_port": 3000,
+  "backend_port": 8000,
+  "rosbridge_port": 9090,
+  "scheme_http": "http",
+  "scheme_ws": "ws"
+}
