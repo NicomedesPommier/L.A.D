@@ -30,7 +30,7 @@ createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <ThemeProvider>
       <IP host={HOST /* , ports: PORTS */}>
-        <BrowserRouter>
+        <BrowserRouter basename={process.env.PUBLIC_URL || "/"}>
           <AuthProvider>
             <ProgressProvider>
               <App />
