@@ -2,6 +2,8 @@
 import React, { useCallback } from "react";
 import { useProgress } from "../../context/ProgressContext";
 import EmbeddedIDE from "../../components/ide/EmbeddedIDE";
+import LidarVisualizer from "../../components/visualization/LidarVisualizer";
+import { useRoslib } from "../../hooks/useRoslib";
 import ideTutorials from "../../config/ideTutorials";
 import "../../styles/_rosflow.scss";
 
@@ -14,6 +16,7 @@ export const meta = {
 
 export default function LidarSubscriberInteractive({ onObjectiveHit, goNext }) {
   const { hitObjective } = useProgress();
+  const { ros, connected } = useRoslib();
 
   // Handle tutorial completion
   const handleTutorialComplete = useCallback(() => {
@@ -42,12 +45,31 @@ export default function LidarSubscriberInteractive({ onObjectiveHit, goNext }) {
 
   return (
     <div className="slide-wrap" style={{ width: "100%", maxWidth: "100%", padding: 0 }}>
-      <EmbeddedIDE
-        workspaceName="sensing"
-        tutorial={ideTutorials.createLidarSubscriber}
-        onTutorialComplete={handleTutorialComplete}
-        onTutorialSkip={handleTutorialSkip}
-      />
+      {/* LIDAR Visualization Panel */}
+      <div style={{ marginBottom: "1.5rem" }}>
+        <h3 style={{ marginBottom: "1rem", color: "#fff" }}>
+          🎯 LIDAR Wall Detection Simulation
+        </h3>
+        <LidarVisualizer
+          ros={ros.current}
+          lidarTopic="/qcar/lidar/scan"
+          fixedFrame="base_link"
+          mode="both"
+        />
+      </div>
+
+      {/* Interactive IDE Tutorial */}
+      <div style={{ marginTop: "1.5rem" }}>
+        <h3 style={{ marginBottom: "1rem", color: "#fff" }}>
+          💻 Write Your LIDAR Subscriber
+        </h3>
+        <EmbeddedIDE
+          workspaceName="sensing"
+          tutorial={ideTutorials.createLidarSubscriber}
+          onTutorialComplete={handleTutorialComplete}
+          onTutorialSkip={handleTutorialSkip}
+        />
+      </div>
     </div>
   );
 }

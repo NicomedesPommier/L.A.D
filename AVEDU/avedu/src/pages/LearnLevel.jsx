@@ -30,6 +30,16 @@ import SensingIntegration from "../levels/SensingIntegration";
 import SensingSubscribe from "../levels/SensingSubscribe";
 import SensingVisualization from "../levels/SensingVisualization";
 import SensingTasks from "../levels/SensingTasks";
+// ROS2 Advanced Unit Levels
+import Ros2QoSIntro from "../levels/Ros2QoSIntro";
+import Ros2QoSSettings from "../levels/Ros2QoSSettings";
+import Ros2Realtime from "../levels/Ros2Realtime";
+import Ros2Algorithms from "../levels/Ros2Algorithms";
+// Transformations Unit Levels
+import TfImportance from "../levels/TfImportance";
+import TfSensorAlignment from "../levels/TfSensorAlignment";
+import TfRobotNavigation from "../levels/TfRobotNavigation";
+import TfPracticalExamples from "../levels/TfPracticalExamples";
 
 const DEBUG = true;
 
@@ -57,6 +67,16 @@ const REGISTRY = Object.freeze({
   "sensing-subscribe": SensingSubscribe,
   "sensing-visualization": SensingVisualization,
   "sensing-tasks": SensingTasks,
+  // ROS2 Advanced Unit Levels
+  "ros2-qos-intro": Ros2QoSIntro,
+  "ros2-qos-settings": Ros2QoSSettings,
+  "ros2-realtime": Ros2Realtime,
+  "ros2-algorithms": Ros2Algorithms,
+  // Transformations Unit Levels
+  "tf-importance": TfImportance,
+  "tf-sensor-alignment": TfSensorAlignment,
+  "tf-robot-navigation": TfRobotNavigation,
+  "tf-practical-examples": TfPracticalExamples,
 });
 
 export default function LearnLevel() {

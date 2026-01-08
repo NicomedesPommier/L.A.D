@@ -340,14 +340,24 @@ class WorkspaceFileViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         try:
             file_instance = serializer.save()
+            print(f"[WorkspaceFile] Updating file: {file_instance.path}")
+            print(f"[WorkspaceFile] Docker path: {file_instance.full_docker_path}")
+            print(f"[WorkspaceFile] Content length: {len(file_instance.content) if file_instance.content else 0}")
+
             # Update Docker file
             self._write_to_docker(file_instance)
 
             # Invalidate file tree cache
             self._invalidate_file_tree_cache(file_instance.canvas_id)
+            print(f"[WorkspaceFile] ✓ File updated successfully: {file_instance.path}")
         except Exception as e:
-            print(f"[WorkspaceFile] Update failed: {str(e)}")
-            raise
+            import traceback
+            error_details = traceback.format_exc()
+            print(f"[WorkspaceFile] ❌ Update failed: {str(e)}")
+            print(f"[WorkspaceFile] Full traceback:\n{error_details}")
+            # Re-raise with more context
+            from rest_framework.exceptions import APIException
+            raise APIException(f"Failed to save file: {str(e)}")
 
     def perform_destroy(self, instance):
         canvas_id = instance.canvas_id
@@ -434,37 +444,76 @@ class WorkspaceFileViewSet(viewsets.ModelViewSet):
         docker_path = file_instance.full_docker_path
 
         try:
+            # First, check if Docker container is running
+            check_container = subprocess.run(
+                ["docker", "ps", "--filter", f"name={DOCKER_CONTAINER}", "--format", "{{.Names}}"],
+                capture_output=True,
+                text=True
+            )
+
+            if DOCKER_CONTAINER not in check_container.stdout:
+                available_containers = subprocess.run(
+                    ["docker", "ps", "--format", "{{.Names}}"],
+                    capture_output=True,
+                    text=True
+                ).stdout.strip()
+                error_msg = (
+                    f"Docker container '{DOCKER_CONTAINER}' is not running!\n"
+                    f"Available containers: {available_containers or 'None'}\n"
+                    f"Please start the container or update DOCKER_CONTAINER in settings."
+                )
+                print(f"[Docker] ❌ {error_msg}")
+                raise Exception(error_msg)
+
+            print(f"[Docker] Writing to: {docker_path}")
+
             # Create parent directories
             parent_dir = os.path.dirname(docker_path)
-            subprocess.run(
-                ["docker", "exec", DOCKER_CONTAINER, "mkdir", "-p", parent_dir],
-                check=True,
-                capture_output=True
-            )
+            if parent_dir:
+                print(f"[Docker] Creating parent dir: {parent_dir}")
+                mkdir_result = subprocess.run(
+                    ["docker", "exec", DOCKER_CONTAINER, "mkdir", "-p", parent_dir],
+                    check=True,
+                    capture_output=True
+                )
 
             if file_instance.file_type == WorkspaceFile.FILE:
                 # Write file content (handle None or empty content)
                 content = file_instance.content if file_instance.content is not None else ""
-                subprocess.run(
+                print(f"[Docker] Writing {len(content)} bytes to file")
+
+                write_result = subprocess.run(
                     ["docker", "exec", "-i", DOCKER_CONTAINER, "tee", docker_path],
-                    input=content.encode(),
+                    input=content.encode('utf-8'),
                     check=True,
                     capture_output=True
                 )
+                print(f"[Docker] ✓ File written successfully")
             else:
                 # Create directory
+                print(f"[Docker] Creating directory")
                 subprocess.run(
                     ["docker", "exec", DOCKER_CONTAINER, "mkdir", "-p", docker_path],
                     check=True,
                     capture_output=True
                 )
+                print(f"[Docker] ✓ Directory created successfully")
+
         except subprocess.CalledProcessError as e:
-            error_msg = e.stderr.decode() if e.stderr else str(e)
-            print(f"Error writing to Docker: {error_msg}")
-            raise Exception(f"Failed to write to Docker: {error_msg}")
+            error_msg = e.stderr.decode('utf-8') if e.stderr else str(e)
+            print(f"[Docker] ❌ CalledProcessError: {error_msg}")
+            print(f"[Docker] Command: {e.cmd}")
+            print(f"[Docker] Return code: {e.returncode}")
+            raise Exception(f"Docker command failed: {error_msg}")
+        except UnicodeDecodeError as e:
+            error_msg = f"File contains invalid UTF-8 characters: {str(e)}"
+            print(f"[Docker] ❌ {error_msg}")
+            raise Exception(error_msg)
         except Exception as e:
-            print(f"Unexpected error in _write_to_docker: {str(e)}")
-            raise
+            print(f"[Docker] ❌ Unexpected error: {str(e)}")
+            import traceback
+            print(traceback.format_exc())
+            raise Exception(f"Failed to write file to Docker: {str(e)}")
 
     def _delete_from_docker(self, file_instance):
         """Delete file from Docker volume using docker exec"""

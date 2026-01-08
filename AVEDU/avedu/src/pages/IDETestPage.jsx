@@ -1,6 +1,19 @@
 // =============================================================
 // FILE: src/pages/IDETestPage.jsx
 // Test page for the ROS Visual IDE components (BlockCanvas + FileExplorer)
+//
+// CACHING SYSTEM:
+// - File tree is cached in localStorage with 5-minute TTL
+// - On mount/refresh: Loads instantly from cache, then refreshes in background
+// - File operations use OPTIMISTIC UPDATES:
+//   * Create/Delete/Rename: UI updates instantly (no Docker scan needed)
+//   * Backend API called in background to persist changes
+//   * If backend fails, changes are reverted with error message
+// - Cache is automatically updated after every file operation
+// - Manual refresh button forces full Docker container scan
+//
+// This approach eliminates the need for slow Docker scans on every operation,
+// making the file explorer feel instant and responsive.
 // =============================================================
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
@@ -18,6 +31,7 @@ import { computeUrdfXml } from "../components/blocks/urdf-helpers";
 import CanvasSelector from "../components/ide/CanvasSelector";
 import ThemeToggle from "../components/ThemeToggle";
 import { useProgress } from "../context/ProgressContext";
+import { useRoslib } from "../hooks/useRoslib";
 import ideTutorials from "../config/ideTutorials";
 import fileApi from "../services/fileApi";
 import "../styles/_rosflow.scss";
@@ -28,6 +42,7 @@ function IDETestPageInner() {
   const navigate = useNavigate();
   const location = useLocation();
   const { hitObjective } = useProgress();
+  const { ros } = useRoslib();
 
   // Get tutorial configuration from location state
   const { tutorialType, objectiveCode } = location.state || {};
@@ -185,6 +200,111 @@ function IDETestPageInner() {
     }
   }, [WORKSPACE_CACHE_KEY]);
 
+  // Update cache helper - updates both state and localStorage
+  const updateFileTreeCache = useCallback((newTree) => {
+    if (!canvas) return;
+
+    setFileTree(newTree);
+
+    // Update localStorage cache
+    const cacheData = {
+      canvas,
+      fileTree: newTree,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(WORKSPACE_CACHE_KEY, JSON.stringify(cacheData));
+    console.log("[IDE] 💾 Cache updated with", newTree.length, "items");
+  }, [canvas, WORKSPACE_CACHE_KEY]);
+
+  // Helper to add file/folder to tree optimistically
+  const addToFileTree = useCallback((path, type) => {
+    const pathParts = path.split('/').filter(Boolean);
+    const fileName = pathParts.pop();
+    const parentPath = pathParts.length > 0 ? pathParts.join('/') : '';
+
+    const newItem = {
+      name: fileName,
+      path: path,
+      type: type === 'directory' ? 'directory' : 'file',
+      children: type === 'directory' ? [] : undefined,
+    };
+
+    const insertIntoTree = (items, targetParentPath) => {
+      // If inserting at root
+      if (targetParentPath === '' || targetParentPath === '/') {
+        return [...items, newItem].sort((a, b) => {
+          // Directories first, then alphabetically
+          if (a.type === 'directory' && b.type !== 'directory') return -1;
+          if (a.type !== 'directory' && b.type === 'directory') return 1;
+          return a.name.localeCompare(b.name);
+        });
+      }
+
+      // Otherwise find parent and insert
+      return items.map(item => {
+        if (item.path === targetParentPath && item.type === 'directory') {
+          return {
+            ...item,
+            children: [...(item.children || []), newItem].sort((a, b) => {
+              if (a.type === 'directory' && b.type !== 'directory') return -1;
+              if (a.type !== 'directory' && b.type === 'directory') return 1;
+              return a.name.localeCompare(b.name);
+            }),
+          };
+        }
+        if (item.children) {
+          return {
+            ...item,
+            children: insertIntoTree(item.children, targetParentPath),
+          };
+        }
+        return item;
+      });
+    };
+
+    const newTree = insertIntoTree(fileTree, parentPath);
+    updateFileTreeCache(newTree);
+    console.log("[IDE] ⚡ Optimistically added to tree:", path);
+  }, [fileTree, updateFileTreeCache]);
+
+  // Helper to remove file/folder from tree optimistically
+  const removeFromFileTree = useCallback((path) => {
+    const removeFromItems = (items) => {
+      return items.filter(item => {
+        if (item.path === path) return false;
+        if (item.children) {
+          item.children = removeFromItems(item.children);
+        }
+        return true;
+      });
+    };
+
+    const newTree = removeFromItems([...fileTree]);
+    updateFileTreeCache(newTree);
+    console.log("[IDE] ⚡ Optimistically removed from tree:", path);
+  }, [fileTree, updateFileTreeCache]);
+
+  // Helper to rename file/folder in tree optimistically
+  const renameInFileTree = useCallback((oldPath, newPath) => {
+    const newName = newPath.split('/').filter(Boolean).pop();
+
+    const renameInItems = (items) => {
+      return items.map(item => {
+        if (item.path === oldPath) {
+          return { ...item, name: newName, path: newPath };
+        }
+        if (item.children) {
+          return { ...item, children: renameInItems(item.children) };
+        }
+        return item;
+      });
+    };
+
+    const newTree = renameInItems([...fileTree]);
+    updateFileTreeCache(newTree);
+    console.log("[IDE] ⚡ Optimistically renamed in tree:", oldPath, "->", newPath);
+  }, [fileTree, updateFileTreeCache]);
+
   // Refresh file tree (manual or after operations)
   const refreshFileTree = useCallback(async (forceRefresh = false) => {
     if (!canvas) return;
@@ -192,20 +312,12 @@ function IDETestPageInner() {
     try {
       console.log("[IDE] Refreshing file tree (force:", forceRefresh, ")");
       const tree = await fileApi.getFileTree(canvas.id, forceRefresh);
-      setFileTree(tree);
+      updateFileTreeCache(tree);
       console.log("[IDE] File tree refreshed:", tree.length, "items");
-
-      // Update cache with new file tree
-      const cacheData = {
-        canvas,
-        fileTree: tree,
-        timestamp: Date.now(),
-      };
-      localStorage.setItem(WORKSPACE_CACHE_KEY, JSON.stringify(cacheData));
     } catch (error) {
       console.error("[IDE] Failed to refresh file tree:", error);
     }
-  }, [canvas, WORKSPACE_CACHE_KEY]);
+  }, [canvas, updateFileTreeCache]);
 
   // Load file content from backend
   const loadFileContent = useCallback(async (path) => {
@@ -507,43 +619,60 @@ function IDETestPageInner() {
       if (!canvas) return;
 
       try {
-        await fileApi.createFile(canvas.id, {
+        // 1. OPTIMISTICALLY update UI immediately
+        addToFileTree(path, type);
+        console.log("[IDE] ⚡ File created instantly in UI (optimistic)");
+
+        // 2. Call backend in background (no await - fire and forget)
+        fileApi.createFile(canvas.id, {
           path,
           file_type: type,
           content: type === "file" ? "" : undefined,
+        }).then(() => {
+          console.log("[IDE] ✓ Backend confirmed file creation:", path);
+          // Optional: Refresh in background to sync any differences
+          // refreshFileTree(false);
+        }).catch(error => {
+          console.error(`[IDE] ❌ Backend file creation failed:`, error);
+          // Revert optimistic update on error
+          removeFromFileTree(path);
+          alert(`Failed to create ${type}: ${error.message}`);
         });
-
-        // Auto-refresh file tree (cache will be invalidated by backend)
-        await refreshFileTree(false);
       } catch (error) {
         console.error(`Failed to create ${type}:`, error);
       }
     },
-    [canvas, refreshFileTree]
+    [canvas, addToFileTree, removeFromFileTree]
   );
 
   const handleFileDelete = useCallback(
     async (path) => {
       if (!canvas) return;
 
-      if (!window.confirm(`Delete ${path}?`)) return;
-
       try {
-        // Find file by path
-        const files = await fileApi.listFiles(canvas.id);
-        const file = files.find((f) => f.path === path);
+        // 1. OPTIMISTICALLY update UI immediately
+        removeFromFileTree(path);
+        console.log("[IDE] ⚡ File deleted instantly in UI (optimistic)");
 
-        if (file) {
-          await fileApi.deleteFile(canvas.id, file.id);
-
-          // Auto-refresh file tree (cache will be invalidated by backend)
-          await refreshFileTree(false);
-        }
+        // 2. Call backend in background
+        fileApi.listFiles(canvas.id).then(files => {
+          const file = files.find((f) => f.path === path);
+          if (file) {
+            return fileApi.deleteFile(canvas.id, file.id);
+          }
+        }).then(() => {
+          console.log("[IDE] ✓ Backend confirmed file deletion:", path);
+        }).catch(error => {
+          console.error("[IDE] ❌ Backend file deletion failed:", error);
+          // Could refresh here to restore if needed
+          refreshFileTree(false);
+          alert(`Failed to delete: ${error.message}`);
+        });
       } catch (error) {
         console.error("Failed to delete:", error);
       }
     },
-    [canvas, refreshFileTree]
+    [canvas, removeFromFileTree, refreshFileTree]
   );
 
   const handleFileRename = useCallback(
@@ -551,21 +680,29 @@ function IDETestPageInner() {
       if (!canvas) return;
 
       try {
-        // Find file by old path
-        const files = await fileApi.listFiles(canvas.id);
-        const file = files.find((f) => f.path === oldPath);
+        // 1. OPTIMISTICALLY update UI immediately
+        renameInFileTree(oldPath, newPath);
+        console.log("[IDE] ⚡ File renamed instantly in UI (optimistic)");
 
-        if (file) {
-          await fileApi.updateFile(canvas.id, file.id, { path: newPath });
-
-          // Auto-refresh file tree (cache will be invalidated by backend)
-          await refreshFileTree(false);
-        }
+        // 2. Call backend in background
+        fileApi.listFiles(canvas.id).then(files => {
+          const file = files.find((f) => f.path === oldPath);
+          if (file) {
+            return fileApi.updateFile(canvas.id, file.id, { path: newPath });
+          }
+        }).then(() => {
+          console.log("[IDE] ✓ Backend confirmed file rename:", oldPath, "->", newPath);
+        }).catch(error => {
+          console.error("[IDE] ❌ Backend file rename failed:", error);
+          // Revert on error
+          renameInFileTree(newPath, oldPath);
+          alert(`Failed to rename: ${error.message}`);
+        });
       } catch (error) {
         console.error("Failed to rename:", error);
       }
     },
-    [canvas, refreshFileTree]
+    [canvas, renameInFileTree]
   );
 
   // Save current file
@@ -574,6 +711,8 @@ function IDETestPageInner() {
       alert("No file selected to save");
       return;
     }
+
+    let metadata; // Declare here so it's accessible in catch block
 
     try {
       // Get content from appropriate source based on editor mode
@@ -584,7 +723,7 @@ function IDETestPageInner() {
         content = fileContents[currentFile];
       }
 
-      const metadata = fileMetadata[currentFile];
+      metadata = fileMetadata[currentFile];
 
       if (content === undefined || content === null) {
         console.error("[IDE] No content to save for:", currentFile);
@@ -653,8 +792,25 @@ function IDETestPageInner() {
         currentFile,
         editorMode,
         hasContent: editorMode === "text" ? !!textContent : !!fileContents[currentFile],
+        metadata,
       });
-      alert(`Failed to save file: ${error.message}\n\nCheck console for details.`);
+
+      // Show detailed error message
+      const fileName = currentFile.split('/').pop();
+      let displayMessage = `Failed to save "${fileName}":\n\n${error.message}`;
+
+      // Add common troubleshooting tips based on error type
+      if (error.message.includes("Docker container") && error.message.includes("not running")) {
+        displayMessage += "\n\n💡 TIP: Make sure your Docker container is running:\n   docker ps";
+      } else if (error.message.includes("UTF-8")) {
+        displayMessage += "\n\n💡 TIP: File may contain special characters. Try using plain text.";
+      } else if (error.message.includes("permission")) {
+        displayMessage += "\n\n💡 TIP: Check Docker volume permissions.";
+      }
+
+      displayMessage += "\n\nCheck browser console (F12) for full error details.";
+
+      alert(displayMessage);
     }
   }, [canvas, currentFile, fileContents, fileMetadata, editorMode, textContent, refreshFileTree]);
 
@@ -887,12 +1043,28 @@ function IDETestPageInner() {
         {/* Left Sidebar - File Explorer */}
         <aside className={`ide-test__explorer ${fileExplorerCollapsed ? 'ide-test__explorer--collapsed' : ''}`}>
           <div className="ide-test__explorer-header">
-            <span className="ide-test__explorer-title">FILES</span>
+            <span className="ide-test__explorer-title">
+              FILES
+              {loadedFromCache && (
+                <span style={{
+                  marginLeft: "0.5rem",
+                  fontSize: "0.65rem",
+                  color: "#68d391",
+                  background: "rgba(104, 211, 145, 0.15)",
+                  padding: "2px 6px",
+                  borderRadius: "3px",
+                  border: "1px solid rgba(104, 211, 145, 0.4)",
+                  fontWeight: "600",
+                }} title="Using cached data - changes happen instantly!">
+                  ⚡ CACHED
+                </span>
+              )}
+            </span>
             <div style={{ display: "flex", gap: "0.25rem" }}>
               <button
                 className="ide-test__explorer-refresh"
                 onClick={() => refreshFileTree(true)}
-                title="Refresh from Docker"
+                title="Force refresh from Docker (re-scans entire container)"
                 style={{
                   background: "transparent",
                   border: "none",
@@ -1036,7 +1208,7 @@ function IDETestPageInner() {
           <aside className="ide-test__sidebar">
             {/* URDF Viewer */}
             <div className="ide-test__urdf-viewer">
-              <URDFViewer xmlCode={generatedCode} />
+              <URDFViewer xmlCode={generatedCode} ros={ros?.current} />
             </div>
 
             {/* Generated Code */}

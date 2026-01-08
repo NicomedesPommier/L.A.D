@@ -22,13 +22,27 @@ function getAuthHeaders() {
 async function handleResponse(response) {
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: response.statusText }));
-    const errorMsg = error.detail || error.message || `API request failed (${response.status})`;
-    console.error("[FileAPI] Request failed:", {
+
+    // Extract detailed error message
+    let errorMsg;
+    if (error.detail) {
+      errorMsg = error.detail;
+    } else if (error.message) {
+      errorMsg = error.message;
+    } else if (error.error) {
+      errorMsg = error.error;
+    } else {
+      errorMsg = `API request failed (${response.status})`;
+    }
+
+    console.error("[FileAPI] ❌ Request failed:", {
       url: response.url,
       status: response.status,
       statusText: response.statusText,
-      error: error
+      error: error,
+      errorMessage: errorMsg
     });
+
     throw new Error(errorMsg);
   }
   return response.json();

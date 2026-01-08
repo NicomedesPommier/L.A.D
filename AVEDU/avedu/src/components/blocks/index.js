@@ -30,6 +30,12 @@ import UrdfXmlPreviewNode from "./UrdfXmlPreviewNode";
 import CoordinatesNode from "./CoordinatesNode";
 import GeometryNode from "./GeometryNode";
 
+// TF (Transform) blocks
+import TfWorldNode from "./TfWorldNode";
+import TfFrameNode from "./TfFrameNode";
+import TfChildNode from "./TfChildNode";
+import CenterMassNode from "./CenterMassNode";
+
 // Palette component
 export { default as CategorizedPalette } from "./CategorizedPalette";
 
@@ -65,6 +71,12 @@ export const nodeTypes = {
   // Utility blocks
   coordinates: CoordinatesNode,
   geometry: GeometryNode,
+
+  // TF (Transform) blocks
+  tfWorld: TfWorldNode,
+  tfFrame: TfFrameNode,
+  tfChild: TfChildNode,
+  centerMass: CenterMassNode,
 };
 
 // Legacy palettes (for backward compatibility)
@@ -140,6 +152,12 @@ export const paletteCategorized = {
     { type: "lidarVisualizer", label: "LIDAR Visualizer" },
     { type: "urdfViewer", label: "URDF 3D Viewer" },
     { type: "urdfControl", label: "Joint Controller" },
+  ],
+  TF: [
+    { type: "tfWorld", label: "World Frame" },
+    { type: "tfFrame", label: "TF Frame" },
+    { type: "tfChild", label: "Child Frame" },
+    { type: "centerMass", label: "Center of Mass" },
   ],
 };
 
@@ -295,6 +313,38 @@ export function defaultDataFor(typeOrPreset) {
   if (typeOrPreset === "geometry")
     return {
       geometry: { type: "box", size: [1, 1, 1] }
+    };
+
+  // -------- TF blocks --------
+  if (typeOrPreset === "tfWorld")
+    return {
+      frameId: "world"
+    };
+
+  if (typeOrPreset === "tfFrame")
+    return {
+      frameId: "",
+      position: { x: 0, y: 0, z: 0 },
+      rotation: { roll: 0, pitch: 0, yaw: 0 },
+      broadcastType: "static"
+    };
+
+  if (typeOrPreset === "tfChild")
+    return {
+      childFrameId: "",
+      position: { x: 0, y: 0, z: 0 },
+      rotation: { roll: 0, pitch: 0, yaw: 0 },
+      broadcastType: "static"
+    };
+
+  if (typeOrPreset === "centerMass")
+    return {
+      geometryName: "",
+      geometry: {},
+      center: { x: 0, y: 0, z: 0 },
+      rotation: { roll: 0, pitch: 0, yaw: 0 },
+      useOffset: false,
+      offset: { x: 0, y: 0, z: 0 }
     };
 
   if (typeOrPreset === "text")

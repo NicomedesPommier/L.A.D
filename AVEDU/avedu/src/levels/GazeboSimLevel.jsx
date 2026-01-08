@@ -2,7 +2,7 @@ import React from 'react';
 import useRoslib from '../hooks/useRoslib';
 import GazeboSimViewer from '../components/gazebo/GazeboSimViewer';
 import RobotTeleop from '../components/gazebo/RobotTeleop';
-import '../styles/levels/GazeboSimLevel.css';
+import '../styles/pages/_gazebo-sim-level.scss';
 
 /**
  * GazeboSimLevel - Complete Gazebo simulation level

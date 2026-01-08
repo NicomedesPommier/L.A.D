@@ -876,5 +876,235 @@
     "description": "Complete safety testing framework tasks",
     "points": 40
   }
+},
+{
+  "model": "learning.objective",
+  "pk": 31,
+  "fields": {
+    "level": "ros2-qos-intro",
+    "code": "ros2-qos-intro-1",
+    "description": "Understand what QoS is and why it matters",
+    "points": 10
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 32,
+  "fields": {
+    "level": "ros2-qos-intro",
+    "code": "ros2-qos-intro-2",
+    "description": "Learn about QoS policies",
+    "points": 10
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 33,
+  "fields": {
+    "level": "ros2-qos-intro",
+    "code": "ros2-qos-intro-3",
+    "description": "Explore built-in QoS profiles",
+    "points": 10
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 34,
+  "fields": {
+    "level": "ros2-qos-settings",
+    "code": "ros2-qos-settings-1",
+    "description": "Master reliability policy configuration",
+    "points": 15
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 35,
+  "fields": {
+    "level": "ros2-qos-settings",
+    "code": "ros2-qos-settings-2",
+    "description": "Configure durability and history policies",
+    "points": 15
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 36,
+  "fields": {
+    "level": "ros2-qos-settings",
+    "code": "ros2-qos-settings-3",
+    "description": "Set up deadline and lifespan policies",
+    "points": 15
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 37,
+  "fields": {
+    "level": "ros2-realtime",
+    "code": "ros2-realtime-1",
+    "description": "Apply QoS to real-time scenarios",
+    "points": 20
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 38,
+  "fields": {
+    "level": "ros2-realtime",
+    "code": "ros2-realtime-2",
+    "description": "Handle WiFi and unreliable networks",
+    "points": 20
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 39,
+  "fields": {
+    "level": "ros2-algorithms",
+    "code": "ros2-algorithms-1",
+    "description": "Implement heartbeat and watchdog patterns",
+    "points": 15
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 40,
+  "fields": {
+    "level": "ros2-algorithms",
+    "code": "ros2-algorithms-2",
+    "description": "Build retry and backoff strategies",
+    "points": 15
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 41,
+  "fields": {
+    "level": "ros2-algorithms",
+    "code": "ros2-algorithms-3",
+    "description": "Validate messages and perform sanity checks",
+    "points": 15
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 42,
+  "fields": {
+    "level": "ros2-algorithms",
+    "code": "ros2-algorithms-4",
+    "description": "Use buffering and smoothing strategies",
+    "points": 15
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 43,
+  "fields": {
+    "level": "tf-importance",
+    "code": "tf-importance-1",
+    "description": "Understand what transformations are and why they matter",
+    "points": 10
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 44,
+  "fields": {
+    "level": "tf-importance",
+    "code": "tf-importance-2",
+    "description": "Learn about the TF tree structure",
+    "points": 10
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 45,
+  "fields": {
+    "level": "tf-importance",
+    "code": "tf-importance-3",
+    "description": "Master the TF2 library components",
+    "points": 10
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 53,
+  "fields": {
+    "level": "tf-importance",
+    "code": "tf-importance-4",
+    "description": "Practice TF2 with interactive examples",
+    "points": 15
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 46,
+  "fields": {
+    "level": "tf-sensor-alignment",
+    "code": "tf-sensor-alignment-1",
+    "description": "Set up static transforms for multiple sensors",
+    "points": 15
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 47,
+  "fields": {
+    "level": "tf-sensor-alignment",
+    "code": "tf-sensor-alignment-2",
+    "description": "Transform sensor data between frames",
+    "points": 15
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 48,
+  "fields": {
+    "level": "tf-robot-navigation",
+    "code": "tf-robot-navigation-1",
+    "description": "Implement robot localization with TF",
+    "points": 15
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 49,
+  "fields": {
+    "level": "tf-robot-navigation",
+    "code": "tf-robot-navigation-2",
+    "description": "Set navigation goals using transforms",
+    "points": 15
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 50,
+  "fields": {
+    "level": "tf-practical-examples",
+    "code": "tf-practical-1",
+    "description": "Integrate URDF with TF system",
+    "points": 15
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 51,
+  "fields": {
+    "level": "tf-practical-examples",
+    "code": "tf-practical-2",
+    "description": "Debug TF issues using tools and commands",
+    "points": 15
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 52,
+  "fields": {
+    "level": "tf-practical-examples",
+    "code": "tf-practical-3",
+    "description": "Apply advanced TF techniques",
+    "points": 15
+  }
 }
 ]
