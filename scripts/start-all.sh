@@ -3,6 +3,12 @@
 
 set -e
 
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# Go to the parent directory (L.A.D root)
+cd "$SCRIPT_DIR/.."
+ROOT_DIR="$(pwd)"
+
 # Colors for output
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
@@ -12,12 +18,13 @@ NC='\033[0m' # No Color
 echo -e "${BLUE}╔════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║   L.A.D Platform - Starting Services  ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════╝${NC}\n"
+echo -e "Working directory: ${ROOT_DIR}\n"
 
 # Detect IP using Node.js
 echo -e "${GREEN}[1/6]${NC} Detecting local IP address..."
-cd AVEDU/avedu
+cd "$ROOT_DIR/AVEDU/avedu"
 IP=$(node scripts/detect-ip.js 2>&1 | grep "Detected local IP:" | awk '{print $NF}')
-cd ../..
+cd "$ROOT_DIR"
 
 if [ -z "$IP" ]; then
     echo -e "${YELLOW}⚠️  Could not auto-detect IP, using config file${NC}"
@@ -28,7 +35,8 @@ echo -e "${GREEN}✓${NC} Using IP: ${BLUE}$IP${NC}\n"
 
 # Update React .env.local with detected IP
 echo -e "${GREEN}[2/6]${NC} Updating React environment variables..."
-cat > AVEDU/avedu/.env.local <<EOF
+cd "$ROOT_DIR/AVEDU/avedu"
+cat > .env.local <<EOF
 # .env.local - Local development overrides (gitignored)
 # This file is automatically managed by the start script
 
@@ -44,24 +52,27 @@ REACT_APP_API_BASE=/api
 # Detected network IP for ROS/Static connections
 REACT_APP_HOST=$IP
 EOF
+cd "$ROOT_DIR"
 echo -e "${GREEN}✓${NC} React .env.local updated with IP: ${BLUE}$IP${NC}\n"
 
 # Update Docker environment variables
 echo -e "${GREEN}[3/6]${NC} Updating Docker environment variables..."
-cat > qcar_docker/.env <<EOF
+cd "$ROOT_DIR/qcar_docker"
+cat > .env <<EOF
 # Docker Compose environment variables
 # This file is automatically managed by the start script
 
 # Exposed IP for CORS configuration
 EXPOSED_IP=$IP
 EOF
+cd "$ROOT_DIR"
 echo -e "${GREEN}✓${NC} Docker .env updated for IP: ${BLUE}$IP${NC}\n"
 
 # Start ROS Docker
 echo -e "${GREEN}[4/6]${NC} Starting ROS 2 Docker (rosbridge + QCar + Gazebo)..."
-cd qcar_docker
+cd "$ROOT_DIR/qcar_docker"
 docker compose up -d
-cd ..
+cd "$ROOT_DIR"
 echo -e "${GREEN}✓${NC} ROS services running on:"
 echo -e "   - rosbridge: ws://$IP:9090"
 echo -e "   - static server: http://$IP:7000"
@@ -69,7 +80,7 @@ echo -e "${YELLOW}⏳${NC} Gazebo initialization takes 60-90 seconds...\n"
 
 # Start Django Backend
 echo -e "${GREEN}[5/6]${NC} Starting Django backend..."
-cd LAD/lad
+cd "$ROOT_DIR/LAD/lad"
 if [ ! -d "../.venv" ]; then
     echo -e "${YELLOW}⚠️  Virtual environment not found, creating...${NC}"
     python3 -m venv ../.venv
@@ -86,16 +97,16 @@ python manage.py migrate --no-input 2>&1 | grep -E "Applying|No migrations"
 python manage.py runserver 0.0.0.0:8000 &
 DJANGO_PID=$!
 echo $DJANGO_PID > /tmp/lad_django.pid
-cd ../..
+cd "$ROOT_DIR"
 echo -e "${GREEN}✓${NC} Django API running on: http://$IP:8000\n"
 
 # Start React Frontend
 echo -e "${GREEN}[6/6]${NC} Starting React frontend..."
-cd AVEDU/avedu
+cd "$ROOT_DIR/AVEDU/avedu"
 npm start &
 REACT_PID=$!
 echo $REACT_PID > /tmp/lad_react.pid
-cd ../..
+cd "$ROOT_DIR"
 
 echo -e "\n${GREEN}════════════════════════════════════════${NC}"
 echo -e "${GREEN}   All services started successfully!   ${NC}"
@@ -113,12 +124,12 @@ echo -e "   Django API: ${GREEN}http://$IP:8000${NC}\n"
 echo -e "${YELLOW}⏳ Wait 60-90 seconds for Gazebo to initialize${NC}\n"
 
 echo -e "${YELLOW}ℹ️  To stop all services, run:${NC}"
-echo -e "   ./scripts/stop-all.sh\n"
+echo -e "   $ROOT_DIR/scripts/stop-all.sh\n"
 
 echo -e "${YELLOW}ℹ️  To view logs:${NC}"
-echo -e "   Django:  tail -f LAD/lad/django.log"
+echo -e "   Django:  tail -f $ROOT_DIR/LAD/lad/django.log"
 echo -e "   React:   Check terminal output"
-echo -e "   Docker:  docker compose -f qcar_docker/docker-compose.yml logs -f\n"
+echo -e "   Docker:  docker compose -f $ROOT_DIR/qcar_docker/docker-compose.yml logs -f\n"
 
 # Keep script running (optional)
 # wait

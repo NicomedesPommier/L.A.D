@@ -100,8 +100,11 @@ cd LAD/lad
 source ../.venv/bin/activate
 echo "Running database migrations..."
 python manage.py migrate
-echo "Loading initial data (units, levels, objectives)..."
-python manage.py loaddata fixtures/initial_data.json
+echo "Loading curriculum data (units, levels, objectives)..."
+python manage.py load_curriculum --clear || {
+    echo "WARNING: Failed to load curriculum data"
+    echo "You can load it manually later with: python manage.py load_curriculum"
+}
 echo ""
 echo "Creating admin superuser (you can skip this if you already have one)..."
 python manage.py createsuperuser || true

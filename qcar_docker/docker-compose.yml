@@ -30,10 +30,18 @@ services:
       - ENABLE_UNITY_TCP=1           # Enable ROS-TCP-Endpoint for Unity
       - UNITY_TCP_PORT=10000         # Port for Unity connection
       - IP_CONFIG_PATH=/config/ip_config.json
+      - DISPLAY=${DISPLAY}           # X11 display for Gazebo GUI
+      - QT_X11_NO_MITSHM=1           # Fix Qt shared memory issues
+      - GAZEBO_WORLD=/worlds/qcar_lidar_test.world  # Specify the world file
     volumes:
       - ../config/ip_config.json:/config/ip_config.json:ro
       - user_workspaces:/workspaces  # Persistent volume for user IDE workspaces
       - ./worlds:/worlds:ro          # Gazebo world files for simulations
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw  # X11 socket for GUI display
+      - $HOME/.Xauthority:/root/.Xauthority:ro  # X11 authentication
+    devices:
+      - /dev/dri:/dev/dri  # GPU devices for hardware acceleration
+    privileged: false  # Not needed with specific device mapping
 
 volumes:
   user_workspaces:

@@ -3,6 +3,7 @@ import React, { Suspense, useCallback, useEffect, useMemo, useState } from "reac
 
 // Import educational slides for this level
 import VisualizingSensorOutputs from "./slidesSensing/03-VisualizingSensorOutputs";
+import GazeboSimulation from "./slidesSensing/03b-GazeboSimulation";
 
 const SLIDES = [
   {
@@ -11,6 +12,13 @@ const SLIDES = [
     order: 1,
     objectiveCode: "SENSE_VISUALIZE",
     Component: VisualizingSensorOutputs,
+  },
+  {
+    id: "gazebo-simulation",
+    title: "QCar Gazebo Simulation",
+    order: 2,
+    objectiveCode: "SENSE_GAZEBO",
+    Component: GazeboSimulation,
   },
 ];
 

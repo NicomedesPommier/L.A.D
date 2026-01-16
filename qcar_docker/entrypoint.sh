@@ -106,12 +106,20 @@ echo "[entrypoint] Keeping package:// URIs in ${TMP_URDF} for robot_state_publis
 if [ "${ENABLE_GAZEBO}" = "1" ]; then
   echo "[entrypoint] Configuring Gazebo with GPU acceleration..."
 
-  # Start Xvfb for OpenGL context (GPU will still be used for rendering)
-  # Xvfb is needed just for X11 display, actual rendering happens on GPU
-  echo "[entrypoint] Starting Xvfb (for OpenGL context, GPU handles rendering)..."
-  Xvfb :99 -screen 0 1024x768x24 +extension GLX +render -noreset &
-  export DISPLAY=:99
-  sleep 2
+  # Check if DISPLAY is already set (from host X11 forwarding)
+  if [ -z "${DISPLAY}" ]; then
+    # No DISPLAY set, use Xvfb for headless operation
+    echo "[entrypoint] Starting Xvfb (for OpenGL context, GPU handles rendering)..."
+    Xvfb :99 -screen 0 1024x768x24 +extension GLX +render -noreset &
+    export DISPLAY=:99
+    sleep 2
+    echo "[entrypoint] Using virtual display :99 (headless mode)"
+  else
+    # DISPLAY is set from host, use it for GUI
+    echo "[entrypoint] Using host DISPLAY=${DISPLAY} for Gazebo GUI"
+    # Allow X11 connections (needed for Docker)
+    xhost +local:docker 2>/dev/null || echo "[entrypoint] xhost not available (running in container)"
+  fi
 
   # Set Gazebo model path so it can find meshes
   export GAZEBO_MODEL_PATH="${QCAR_DESC_SHARE}:${GAZEBO_MODEL_PATH}"

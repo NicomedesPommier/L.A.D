@@ -40,7 +40,14 @@
       "Bash(curl:*)",
       "Bash(tasklist:*)",
       "Bash(timeout /t 8 /nobreak)",
-      "WebFetch(domain:docs.ros.org)"
+      "WebFetch(domain:docs.ros.org)",
+      "Bash(chmod:*)",
+      "Bash(xhost:*)",
+      "Bash(./start-gazebo-gui.sh:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker-compose version:*)",
+      "Bash(wmctrl -l:*)",
+      "Bash(xdotool search:*)"
     ],
     "deny": [],
     "ask": []
