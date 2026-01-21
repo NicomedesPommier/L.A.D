@@ -175,5 +175,188 @@ export function SlideCenter({ children, className = "" }) {
   return <div className={`slide-center ${className}`}>{children}</div>;
 }
 
+/**
+ * Featured box for highlighted content (pipeline steps, feature highlights)
+ * @param {object} props
+ * @param {React.ReactNode} props.children - Content
+ * @param {string} [props.variant] - Color variant: 'default', 'magenta', 'orange', 'yellow', 'green', 'purple'
+ * @param {string} [props.className] - Additional CSS classes
+ */
+export function SlideFeatured({ children, variant = "default", className = "" }) {
+  const variantClass = variant !== "default" ? `slide-featured--${variant}` : "";
+  return <div className={`slide-featured ${variantClass} ${className}`}>{children}</div>;
+}
+
+/**
+ * Pipeline diagram with arrows between steps
+ * @param {object} props
+ * @param {React.ReactNode} props.children - Pipeline steps (use SlideFeatured for each step)
+ * @param {number} [props.steps] - Number of steps: 3, 4 (default), 5
+ * @param {string} [props.className] - Additional CSS classes
+ */
+export function SlidePipeline({ children, steps = 4, className = "" }) {
+  const stepsClass = steps === 3 ? "slide-pipeline--3" : steps === 5 ? "slide-pipeline--5" : "";
+  return <div className={`slide-pipeline ${stepsClass} ${className}`}>{children}</div>;
+}
+
+/**
+ * Pipeline arrow separator
+ */
+export function SlidePipelineArrow() {
+  return <div className="slide-pipeline__arrow">→</div>;
+}
+
+/**
+ * Code snippet with copy button and optional title
+ * @param {object} props
+ * @param {string} props.code - Code content
+ * @param {string} [props.title] - Optional title above code block
+ * @param {string} [props.language] - Programming language for syntax hints
+ * @param {boolean} [props.showCopy] - Show copy button (default: true)
+ * @param {string} [props.hint] - Optional hint text below code
+ * @param {string} [props.className] - Additional CSS classes
+ */
+export function SlideCodeSnippet({ code, title, language = "", showCopy = true, hint, className = "" }) {
+  const [copied, setCopied] = React.useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard?.writeText(code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }).catch(() => { });
+  };
+
+  return (
+    <div className={`cmd-card ${className}`}>
+      {title && <div className="cmd-card__title">{title}</div>}
+      <pre className="cmd-card__code" data-language={language}>{code}</pre>
+      {(showCopy || hint) && (
+        <div className="cmd-card__actions">
+          {showCopy && (
+            <button className="btn btn--sm" onClick={handleCopy}>
+              {copied ? "✓ Copied" : "Copy"}
+            </button>
+          )}
+        </div>
+      )}
+      {hint && <div className="cmd-card__hint">{hint}</div>}
+    </div>
+  );
+}
+
+/**
+ * Interactive folder tree component
+ * @param {object} props
+ * @param {Array} props.items - Array of {id, label, kind: 'dir'|'file', desc}
+ * @param {string} [props.selectedId] - Currently selected item ID
+ * @param {Function} [props.onSelect] - Selection handler (id) => void
+ * @param {string} [props.className] - Additional CSS classes
+ */
+export function SlideFolderTree({ items, selectedId, onSelect, className = "" }) {
+  return (
+    <div className={`tree ${className}`}>
+      <pre className="tree__pre">
+        {items.map((item) => (
+          <div
+            key={item.id}
+            role="button"
+            onClick={() => onSelect?.(item.id)}
+            title="Click to see details"
+            className={`tree__item ${selectedId === item.id ? "is-selected" : ""}`}
+          >
+            <code>{item.label}</code>
+          </div>
+        ))}
+      </pre>
+    </div>
+  );
+}
+
+/**
+ * Folder tree detail panel
+ * @param {object} props
+ * @param {string} props.label - Item label
+ * @param {string} props.description - Item description
+ * @param {string} [props.className] - Additional CSS classes
+ */
+export function SlideFolderDetail({ label, description, className = "" }) {
+  return (
+    <div className={`detail ${className}`}>
+      <div className="detail__label">{label?.replace(/^\s+/, "")}</div>
+      <div className="detail__desc">{description}</div>
+    </div>
+  );
+}
+
+/**
+ * Visualization wrapper for canvas-based interactive content
+ * Manages responsive sizing and provides consistent styling
+ * @param {object} props
+ * @param {React.ReactNode} props.children - Canvas or visualization content
+ * @param {Function} [props.renderCanvas] - Optional render function that receives (width, height)
+ * @param {string} [props.caption] - Optional caption below visualization
+ * @param {string} [props.className] - Additional CSS classes
+ */
+export function SlideVisualization({ children, caption, className = "" }) {
+  return (
+    <div className={`slide-canvas ${className}`}>
+      {children}
+      {caption && <figcaption className="slide-text--sm slide-muted slide-p-md">{caption}</figcaption>}
+    </div>
+  );
+}
+
+/**
+ * Slider control for interactive visualizations
+ * @param {object} props
+ * @param {string} props.label - Slider label
+ * @param {number} props.value - Current value
+ * @param {Function} props.onChange - Change handler
+ * @param {number} [props.min] - Minimum value
+ * @param {number} [props.max] - Maximum value
+ * @param {number} [props.step] - Step increment
+ * @param {string} [props.unit] - Unit suffix (e.g., "°", "m/s")
+ * @param {string} [props.className] - Additional CSS classes
+ */
+export function SlideSlider({ label, value, onChange, min = 0, max = 100, step = 1, unit = "", className = "" }) {
+  return (
+    <div className={`slide-slider ${className}`}>
+      <span className="slide-slider__label">
+        {label}: <span className="slide-slider__value">{value}{unit}</span>
+      </span>
+      <input
+        type="range"
+        className="slide-slider__input"
+        min={min}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+      />
+    </div>
+  );
+}
+
+/**
+ * Tip/info box for contextual hints
+ * @param {object} props
+ * @param {React.ReactNode} props.children - Tip content
+ * @param {string} [props.className] - Additional CSS classes
+ */
+export function SlideTip({ children, className = "" }) {
+  return <div className={`slide-tip ${className}`}>{children}</div>;
+}
+
+/**
+ * Grid layout utility
+ * @param {object} props
+ * @param {React.ReactNode} props.children - Grid items
+ * @param {number} [props.cols] - Number of columns: 2, 3, 4
+ * @param {string} [props.className] - Additional CSS classes
+ */
+export function SlideGrid({ children, cols = 2, className = "" }) {
+  return <div className={`slide-grid slide-grid--${cols} ${className}`}>{children}</div>;
+}
+
 // Default export for convenience
 export default SlideLayout;

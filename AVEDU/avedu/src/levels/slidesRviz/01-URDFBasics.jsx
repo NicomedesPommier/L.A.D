@@ -2,6 +2,7 @@
 // File: src/levels/slidesRviz/01-URDFBasic.jsx
 // =============================================
 import React from "react";
+import { SlideCodeSnippet } from "../../components/slides/SlideLayout";
 
 export const meta = {
   id: "urdf-basics",
@@ -24,14 +25,8 @@ const HINTS = [
 function Pill({ active, children, onClick }) {
   return (
     <button
-      className="btn"
-      style={{
-        padding: ".25rem .6rem",
-        borderRadius: 999,
-        opacity: active ? 1 : 0.8,
-        background: active ? "var(--neon,#7df9ff)" : "var(--glass, rgba(255,255,255,.06))",
-        boxShadow: active ? "0 0 10px rgba(125,249,255,.4)" : "none",
-      }}
+      className={`btn btn--sm ${active ? "btn--neon" : "btn--glass"}`}
+      style={{ borderRadius: 999 }}
       onClick={onClick}
     >
       {children}
@@ -39,30 +34,7 @@ function Pill({ active, children, onClick }) {
   );
 }
 
-export default function URDFBasics({ onObjectiveHit, goNext }) {
-  const [sel, setSel] = React.useState("links");
-  const current = React.useMemo(() => HINTS.find(h => h.id === sel) || HINTS[0], [sel]);
-
-  return (
-    <div className="slide-wrap" key={meta.id}>
-      <h2>{meta.title}</h2>
-      <p style={{opacity:.9}}>URDF (<i>Unified Robot Description Format</i>) es un formato XML para describir la estructura física de un robot: sus partes (<code>links</code>) y cómo se conectan (<code>joints</code>). Esta descripción se usa en RViz para visualizar, en TF para marcos de referencia, y en simuladores/control.</p>
-
-      <div style={{display:"grid", gap:".75rem"}}>
-        <div style={{display:"flex", gap:".5rem", flexWrap:"wrap"}}>
-          {HINTS.map(h => (
-            <Pill key={h.id} active={h.id===sel} onClick={() => setSel(h.id)}>{h.label}</Pill>
-          ))}
-        </div>
-        <div className="section-card">
-          <div className="section-card__title">{current.label}</div>
-          <div>{current.desc}</div>
-        </div>
-
-        <div className="section-card">
-          <div className="section-card__title">Estructura mínima (URDF/Xacro)</div>
-          <pre className="cmd-card__code" style={{whiteSpace:"pre-wrap"}}>{`
-<robot name="mi_robot">
+const URDF_SNIPPET = `<robot name="mi_robot">
   <link name="base"/>
   <link name="rueda_d"/>
   <joint name="base_rueda_d" type="continuous">
@@ -71,9 +43,33 @@ export default function URDFBasics({ onObjectiveHit, goNext }) {
     <origin xyz="0.2 -0.15 0.0" rpy="0 0 0"/>
     <axis xyz="0 1 0"/>
   </joint>
-</robot>`}</pre>
-          <div style={{display:"flex", gap:".5rem", justifyContent:"flex-end"}}>
-            <button className="btn" onClick={() => onObjectiveHit?.(meta.objectiveCode)}>Marcar logrado</button>
+</robot>`;
+
+export default function URDFBasics({ onObjectiveHit, goNext }) {
+  const [sel, setSel] = React.useState("links");
+  const current = React.useMemo(() => HINTS.find(h => h.id === sel) || HINTS[0], [sel]);
+
+  return (
+    <div className="slide-wrap" key={meta.id}>
+      <h2>{meta.title}</h2>
+      <p className="slide-text-muted">URDF (<i>Unified Robot Description Format</i>) es un formato XML para describir la estructura física de un robot: sus partes (<code>links</code>) y cómo se conectan (<code>joints</code>). Esta descripción se usa en RViz para visualizar, en TF para marcos de referencia, y en simuladores/control.</p>
+
+      <div className="slide-flex slide-flex--col slide-gap-md slide-mt-md">
+        <div className="slide-flex slide-gap-sm slide-wrap-flex">
+          {HINTS.map(h => (
+            <Pill key={h.id} active={h.id === sel} onClick={() => setSel(h.id)}>{h.label}</Pill>
+          ))}
+        </div>
+        <div className="slide-card">
+          <div className="slide-card__title">{current.label}</div>
+          <div>{current.desc}</div>
+        </div>
+
+        <div className="slide-card">
+          <div className="slide-card__title">Estructura mínima (URDF/Xacro)</div>
+          <SlideCodeSnippet code={URDF_SNIPPET} language="xml" />
+          <div className="slide-flex slide-gap-sm slide-justify-end slide-mt-sm">
+            <button className="btn btn--primary" onClick={() => onObjectiveHit?.(meta.objectiveCode)}>Marcar logrado</button>
             <button className="btn" onClick={goNext}>Siguiente ⟩</button>
           </div>
         </div>
@@ -81,4 +77,5 @@ export default function URDFBasics({ onObjectiveHit, goNext }) {
     </div>
   );
 }
+
 

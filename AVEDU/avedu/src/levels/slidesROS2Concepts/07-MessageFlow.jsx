@@ -13,25 +13,21 @@ export default function MessageFlow({ onObjectiveHit }) {
     {
       title: "1:1 Communication",
       description: "One publisher, one subscriber",
-      image: "Simple data flow",
       useCase: "Robot controller sending commands to motor driver"
     },
     {
       title: "1:Many (Broadcast)",
       description: "One publisher, multiple subscribers",
-      image: "Broadcast pattern",
       useCase: "Camera publishing images to multiple vision processing nodes"
     },
     {
       title: "Many:1 (Aggregation)",
       description: "Multiple publishers, one subscriber",
-      image: "Aggregation pattern",
       useCase: "Multiple sensors publishing to a single sensor fusion node"
     },
     {
       title: "Many:Many (Network)",
       description: "Multiple publishers and subscribers",
-      image: "Complex network",
       useCase: "Complete autonomous vehicle with many interconnected nodes"
     }
   ];
@@ -48,14 +44,12 @@ export default function MessageFlow({ onObjectiveHit }) {
         </p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+      <div className="slide-grid slide-grid--2">
         {scenarios.map((scenario, idx) => (
-          <div key={idx} className="slide-card" style={{ padding: "1rem" }}>
+          <div key={idx} className="slide-card slide-p-lg">
             <div className="slide-card__title">{scenario.title}</div>
-            <p style={{ fontSize: "0.9em", marginTop: "0.5rem" }}>
-              {scenario.description}
-            </p>
-            <div className="slide-callout slide-callout--info" style={{ marginTop: "0.75rem" }}>
+            <p className="slide-text--sm slide-mt-sm">{scenario.description}</p>
+            <div className="slide-callout slide-callout--info slide-mt-md">
               <b>Use Case:</b> {scenario.useCase}
             </div>
           </div>
@@ -64,29 +58,29 @@ export default function MessageFlow({ onObjectiveHit }) {
 
       <div className="slide-card">
         <div className="slide-card__title">Message Flow Properties</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.5rem" }}>
+        <div className="slide-grid slide-grid--2 slide-gap-lg">
           <div>
-            <b style={{ color: "var(--neon, #7df9ff)" }}>Asynchronous</b>
+            <b className="slide-dot--neon">Asynchronous</b>
             <p>
               Publishers don't wait for subscribers. They send messages and continue immediately.
             </p>
           </div>
           <div>
-            <b style={{ color: "var(--neon, #7df9ff)" }}>Decoupled</b>
+            <b className="slide-dot--neon">Decoupled</b>
             <p>
               Publishers and subscribers don't need to know about each other.
               They only need to agree on the topic name and message type.
             </p>
           </div>
           <div>
-            <b style={{ color: "var(--neon, #7df9ff)" }}>Best-Effort by Default</b>
+            <b className="slide-dot--neon">Best-Effort by Default</b>
             <p>
               Messages are sent once. If a subscriber misses it, it's gone.
               (Can be changed with QoS settings)
             </p>
           </div>
           <div>
-            <b style={{ color: "var(--neon, #7df9ff)" }}>Type-Safe</b>
+            <b className="slide-dot--neon">Type-Safe</b>
             <p>
               The message type is enforced. A String publisher can only connect
               to String subscribers.
@@ -96,7 +90,7 @@ export default function MessageFlow({ onObjectiveHit }) {
       </div>
 
       <div className="slide-card">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div className="slide-flex slide-flex--between">
           <div className="slide-card__title">Practical Example</div>
           <button className="btn" onClick={() => onObjectiveHit?.(meta.objectiveCode)}>
             Complete Lesson
@@ -119,3 +113,4 @@ export default function MessageFlow({ onObjectiveHit }) {
     </div>
   );
 }
+

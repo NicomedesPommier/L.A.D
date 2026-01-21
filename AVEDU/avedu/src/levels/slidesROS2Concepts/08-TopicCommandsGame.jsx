@@ -10,6 +10,7 @@ export const meta = {
 
 export default function TopicCommandsGame({ onObjectiveHit }) {
   const commands = [
+
     {
       command: "ros2 topic list",
       description: "List all active topics in the ROS 2 network",
@@ -65,34 +66,23 @@ export default function TopicCommandsGame({ onObjectiveHit }) {
           ROS 2 provides powerful command-line tools to inspect and debug topics.
           Click through each command to learn what it does.
         </p>
-        <p style={{ marginTop: "0.5rem", fontSize: "0.9em", opacity: 0.8 }}>
+        <p className="slide-text--sm slide-muted slide-mt-sm">
           Progress: {completed.size} / {commands.length} commands learned
         </p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "250px 1fr", gap: "1rem" }}>
+      <div className="slide-grid slide-grid--30-70 slide-gap-md">
         {/* Command list */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        <div className="slide-flex slide-flex--col slide-gap-sm">
           {commands.map((cmd, idx) => (
             <button
               key={idx}
-              className="btn"
+              className={`btn btn--left-align ${selected === idx ? "btn--primary" : ""} ${completed.has(idx) ? "is-complete" : ""}`}
               onClick={() => setSelected(idx)}
-              style={{
-                textAlign: "left",
-                opacity: selected === idx ? 1 : 0.6,
-                background: completed.has(idx)
-                  ? "rgba(0, 255, 0, 0.2)"
-                  : selected === idx
-                    ? "var(--neon, #7df9ff)"
-                    : "var(--glass, rgba(255,255,255,.06))",
-                color: selected === idx ? "#000" : "inherit",
-                fontSize: "0.75em",
-                position: "relative",
-              }}
+              style={{ opacity: selected === idx ? 1 : 0.7 }}
             >
-              {completed.has(idx) && <span style={{ marginRight: "0.5rem" }}>✓</span>}
-              {cmd.command}
+              {completed.has(idx) && <span className="slide-mr-sm">✓</span>}
+              {cmd.command.split(" ")[2]} {/* Show just the command keyword like 'list', 'echo' */}
             </button>
           ))}
         </div>
@@ -100,34 +90,29 @@ export default function TopicCommandsGame({ onObjectiveHit }) {
         {/* Command details */}
         <div className="slide-card">
           <div className="slide-card__title">
-            <code>{commands[selected].command}</code>
+            <code className="slide-text--neon">{commands[selected].command}</code>
           </div>
 
-          <div style={{ marginTop: "1rem" }}>
+          <div className="slide-mt-md">
             <b>What it does:</b>
-            <p>{commands[selected].description}</p>
+            <p className="slide-text--sm slide-muted">{commands[selected].description}</p>
           </div>
 
-          <div style={{ marginTop: "1rem" }}>
+          <div className="slide-mt-md">
             <b>When to use it:</b>
-            <p>{commands[selected].useWhen}</p>
+            <p className="slide-text--sm slide-muted">{commands[selected].useWhen}</p>
           </div>
 
-          <div style={{ marginTop: "1rem" }}>
+          <div className="slide-mt-md">
             <b>Example output:</b>
-            <pre style={{
-              background: "rgba(0,0,0,0.4)",
-              padding: "0.75rem",
-              borderRadius: "6px",
-              fontSize: "0.85em",
-              overflow: "auto",
-              marginTop: "0.5rem"
-            }}>
-              <code>{commands[selected].example}</code>
-            </pre>
+            <div className="slide-code-wrapper slide-mt-sm">
+              <pre className="slide-code slide-code--sm">
+                <code>{commands[selected].example}</code>
+              </pre>
+            </div>
           </div>
 
-          <div style={{ display: "flex", gap: "0.5rem", marginTop: "1rem" }}>
+          <div className="slide-actions slide-mt-md">
             <button
               className="btn"
               onClick={() => navigator.clipboard?.writeText(commands[selected].command)}
@@ -136,9 +121,8 @@ export default function TopicCommandsGame({ onObjectiveHit }) {
             </button>
             {!completed.has(selected) && (
               <button
-                className="btn"
+                className="btn btn--success"
                 onClick={() => handleMarkComplete(selected)}
-                style={{ background: "rgba(0, 255, 0, 0.3)" }}
               >
                 Mark as Learned
               </button>
@@ -148,11 +132,7 @@ export default function TopicCommandsGame({ onObjectiveHit }) {
       </div>
 
       {completed.size === commands.length && (
-        <div className="slide-card" style={{
-          marginTop: "1rem",
-          background: "rgba(0, 255, 0, 0.1)",
-          border: "2px solid rgba(0, 255, 0, 0.5)"
-        }}>
+        <div className="slide-card slide-card--success slide-mt-md">
           <div className="slide-card__title">🎉 Congratulations!</div>
           <p>
             You've learned all the essential ROS 2 topic commands! These tools will be
@@ -163,3 +143,4 @@ export default function TopicCommandsGame({ onObjectiveHit }) {
     </div>
   );
 }
+

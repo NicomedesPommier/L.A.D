@@ -1,6 +1,5 @@
 // src/levels/slidesRviz/03-QCarDescription.jsx
 import React from "react";
-import "../../styles/pages/_folder.scss";
 
 export const meta = {
   id: "qcar-description",
@@ -102,8 +101,8 @@ const DEFAULT_XACRO = String.raw`<robot name="qcar" xmlns:xacro="http://www.ros.
 
 function SectionCard({ title, children, right }) {
   return (
-    <div className={`section-card ${right ? "section-card--right" : ""}`}>
-      <div className="section-card__title">{title}</div>
+    <div className={`slide-card ${right ? "slide-card--right" : ""}`}>
+      <div className="slide-card__title">{title}</div>
       {children}
     </div>
   );
@@ -122,9 +121,9 @@ export default function QCarDescription({ onObjectiveHit }) {
     <div className="slide-wrap" key={meta.id}>
       <h2>{meta.title}</h2>
 
-      {/* Layout superior: árbol + detalle (usa .ws-grid de _folder.scss) */}
+      {/* Layout superior: árbol + detalle */}
       <SectionCard title="Estructura del paquete qcar_description">
-        <div className="ws-grid">
+        <div className="slide-grid slide-grid--2 slide-gap-md">
           {/* Árbol clicable */}
           <div className="tree">
             <pre className="tree__pre">
@@ -152,53 +151,53 @@ export default function QCarDescription({ onObjectiveHit }) {
 
       {/* Archivos clave (dos tarjetas) */}
       <SectionCard title="Archivos clave">
-        <div className="colcon-grid">
-          <div className="cmd-card">
-            <div className="cmd-card__title">CMakeLists.txt (mínimo)</div>
-            <pre className="cmd-card__code">{DEFAULT_CMAKE}</pre>
+        <div className="slide-grid slide-grid--2 slide-gap-md">
+          <div className="slide-card slide-card--nested">
+            <div className="slide-card__title">CMakeLists.txt (mínimo)</div>
+            <pre className="slide-code slide-code--sm">{DEFAULT_CMAKE}</pre>
           </div>
-          <div className="cmd-card">
-            <div className="cmd-card__title">launch/display.launch.py</div>
-            <pre className="cmd-card__code">{DEFAULT_LAUNCH}</pre>
+          <div className="slide-card slide-card--nested">
+            <div className="slide-card__title">launch/display.launch.py</div>
+            <pre className="slide-code slide-code--sm">{DEFAULT_LAUNCH}</pre>
           </div>
         </div>
       </SectionCard>
 
       {/* URDF base */}
       <SectionCard title="URDF/Xacro base">
-        <pre className="cmd-card__code">{DEFAULT_XACRO}</pre>
-        <div className="cmd-card__hint">
+        <pre className="slide-code slide-code--sm">{DEFAULT_XACRO}</pre>
+        <div className="slide-callout slide-callout--info slide-mt-sm">
           Usa <b>package://qcar_description/…</b> para rutas a mallas y mantén <i>collision</i> simple para buen rendimiento.
         </div>
       </SectionCard>
 
       {/* Comandos útiles */}
       <SectionCard title="Comandos útiles" right>
-        <div className="colcon-grid">
-          <ul className="colcon-list">
+        <div className="slide-grid slide-grid--2 slide-gap-md">
+          <ul className="slide-list">
             <li><b>Compilar solo este paquete</b> con <code>--packages-select</code>.</li>
             <li>Tras compilar, <b>source</b> del overlay para exponer recursos.</li>
             <li>Usa una <b>config RViz</b> incluida para levantar la vista por defecto.</li>
           </ul>
-          <div className="cmd-card">
-            <div className="cmd-card__title">Build + Launch</div>
-            <pre className="cmd-card__code">{String.raw`colcon build --symlink-install --packages-select qcar_description
+          <div className="slide-card slide-card--nested">
+            <div className="slide-card__title">Build + Launch</div>
+            <pre className="slide-code slide-code--sm">{String.raw`colcon build --symlink-install --packages-select qcar_description
 source install/setup.bash
 
 # Ver en RViz
 ros2 launch qcar_description display.launch.py use_gui:=true`}</pre>
-            <div className="cmd-card__actions">
+            <div className="slide-flex slide-mt-sm slide-gap-sm">
               <button
-                className="btn"
+                className="btn btn--sm"
                 onClick={() =>
                   navigator.clipboard?.writeText(
                     `colcon build --symlink-install --packages-select qcar_description\nsource install/setup.bash\n\nros2 launch qcar_description display.launch.py use_gui:=true`
-                  ).catch(() => {})
+                  ).catch(() => { })
                 }
               >
                 Copiar
               </button>
-              <button className="btn" onClick={markDone}>Marcar logrado</button>
+              <button className="btn btn--sm btn--primary" onClick={markDone}>Marcar logrado</button>
             </div>
           </div>
         </div>
@@ -206,3 +205,4 @@ ros2 launch qcar_description display.launch.py use_gui:=true`}</pre>
     </div>
   );
 }
+

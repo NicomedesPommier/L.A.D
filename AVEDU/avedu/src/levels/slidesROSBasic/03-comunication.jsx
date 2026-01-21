@@ -13,6 +13,7 @@ import {
   Position,
 } from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
+import "../../styles/_rosflow.scss";
 
 export const meta = {
   id: "connect-game",
@@ -82,18 +83,8 @@ function PacketEdge(props) {
 
 function IoNode({ data, isConnectable }) {
   return (
-    <div
-      style={{
-        padding: "8px 12px",
-        border: "1px solid rgba(255,255,255,.2)",
-        borderRadius: 10,
-        background: "rgba(255,255,255,.06)",
-        color: "var(--text,#e6f1ff)",
-        minWidth: 120,
-        textAlign: "center",
-      }}
-    >
-      <div style={{ fontWeight: 700 }}>{data.label}</div>
+    <div className="io-node">
+      <div>{data.label}</div>
       {data.showLeft && <Handle type="target" position="left" id="left" isConnectable={isConnectable} />}
       {data.showRight && <Handle type="source" position="right" id="right" isConnectable={isConnectable} />}
     </div>
@@ -104,14 +95,14 @@ const nodeTypes = { ioNode: IoNode };
 const edgeTypes = { simple: SimpleEdge, packet: PacketEdge };
 
 export default function Game({ onObjectiveHit }) {
-  const P = { x: 50,  y: 100 };
+  const P = { x: 50, y: 100 };
   const N = { x: 300, y: 100 };
   const S = { x: 560, y: 100 };
 
   const initialNodes = useMemo(() => ([
-    { id: "pub",  type: "ioNode", position: P, data: { label: "Publisher",  showRight: true } },
-    { id: "node", type: "ioNode", position: N, data: { label: "Node",       showLeft: true, showRight: true } },
-    { id: "sub",  type: "ioNode", position: S, data: { label: "Subscriber", showLeft: true } },
+    { id: "pub", type: "ioNode", position: P, data: { label: "Publisher", showRight: true } },
+    { id: "node", type: "ioNode", position: N, data: { label: "Node", showLeft: true, showRight: true } },
+    { id: "sub", type: "ioNode", position: S, data: { label: "Subscriber", showLeft: true } },
   ]), []);
 
   // 🔹 Solo guardamos en estado LAS CONEXIONES reales del usuario
@@ -179,9 +170,9 @@ export default function Game({ onObjectiveHit }) {
   };
 
   return (
-    <div className="slide-wrap" style={{ display: "grid", gap: "0.75rem" }}>
+    <div className="slide-wrap slide-gap-md">
       <h2>{meta.title}</h2>
-      <div style={{ height: 300, borderRadius: 12, overflow: "hidden" }}>
+      <div className="slide-card slide-card--highlight slide-p-0 slide-overflow-hidden slide-h-300">
         <ReactFlow
           nodes={nodes}
           edges={[...connEdges, packetEdge]}  // 👈 renderizamos conexiones + la arista derivada
@@ -192,22 +183,37 @@ export default function Game({ onObjectiveHit }) {
           edgeTypes={edgeTypes}
           fitView
           fitViewOptions={{ padding: 0.18 }}
+          className="bg-dots"
         >
-          <Background />
-          <Controls />
+          <Background color="rgba(255, 255, 255, 0.1)" gap={20} />
+          <Controls className="react-flow__controls-dark" />
         </ReactFlow>
       </div>
 
-      <div style={{ display: "flex", gap: ".5rem", alignItems: "center" }}>
-        <button className="btn" onClick={handleValidate} disabled={!canSend}>
+      <div className="slide-flex slide-gap-sm slide-items-center slide-flex--wrap">
+        <button
+          className="btn btn--primary"
+          onClick={handleValidate}
+          disabled={!canSend}
+        >
           {validated ? "¡Conexión validada!" : "Validar y enviar"}
         </button>
         {!canSend && (
-          <span style={{ opacity: .85 }}>
+          <span className="slide-muted slide-text--sm">
             Conecta <b>Publisher → Node</b> y <b>Node → Subscriber</b>.
           </span>
         )}
       </div>
+
+      {validated && (
+        <div className="slide-card slide-card--success slide-mt-md">
+          <div className="slide-card__title">¡Excelente!</div>
+          <p>
+            Has conectado los nodos correctamente. Observa cómo el mensaje viaja del Publicador al Suscriptor.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
+

@@ -24,59 +24,24 @@ export default function WhatAreTopics() {
 
       <div className="slide-card">
         <div className="slide-card__title">The Publish-Subscribe Pattern</div>
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "1fr auto 1fr auto 1fr",
-          alignItems: "center",
-          gap: "1rem",
-          padding: "1.5rem",
-          background: "rgba(0,0,0,0.2)",
-          borderRadius: "8px"
-        }}>
-          <div style={{ textAlign: "center" }}>
-            <div style={{
-              padding: "1rem",
-              background: "rgba(125, 249, 255, 0.2)",
-              borderRadius: "8px",
-              border: "2px solid rgba(125, 249, 255, 0.5)"
-            }}>
-              <b>Publisher Node</b>
-              <p style={{ fontSize: "0.85em", marginTop: "0.5rem" }}>
-                Sends messages
-              </p>
-            </div>
+        <div className="slide-pipeline slide-pipeline--3">
+          <div className="slide-featured">
+            <b>Publisher Node</b>
+            <p className="slide-text--sm">Sends messages</p>
           </div>
 
-          <div style={{ fontSize: "2em", color: "var(--neon, #7df9ff)" }}>→</div>
+          <div className="slide-pipeline__arrow">→</div>
 
-          <div style={{ textAlign: "center" }}>
-            <div style={{
-              padding: "1rem",
-              background: "rgba(255, 95, 244, 0.2)",
-              borderRadius: "8px",
-              border: "2px solid rgba(255, 95, 244, 0.5)"
-            }}>
-              <b>Topic</b>
-              <p style={{ fontSize: "0.85em", marginTop: "0.5rem" }}>
-                /camera/image
-              </p>
-            </div>
+          <div className="slide-featured slide-featured--magenta">
+            <b>Topic</b>
+            <p className="slide-text--sm">/camera/image</p>
           </div>
 
-          <div style={{ fontSize: "2em", color: "var(--neon, #7df9ff)" }}>→</div>
+          <div className="slide-pipeline__arrow">→</div>
 
-          <div style={{ textAlign: "center" }}>
-            <div style={{
-              padding: "1rem",
-              background: "rgba(125, 249, 255, 0.2)",
-              borderRadius: "8px",
-              border: "2px solid rgba(125, 249, 255, 0.5)"
-            }}>
-              <b>Subscriber Node(s)</b>
-              <p style={{ fontSize: "0.85em", marginTop: "0.5rem" }}>
-                Receive messages
-              </p>
-            </div>
+          <div className="slide-featured">
+            <b>Subscriber Node(s)</b>
+            <p className="slide-text--sm">Receive messages</p>
           </div>
         </div>
       </div>
@@ -99,7 +64,7 @@ export default function WhatAreTopics() {
 
       <div className="slide-card">
         <div className="slide-card__title">Common Topic Examples</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+        <div className="slide-grid slide-grid--2">
           <div>
             <code>/camera/image_raw</code>
             <p>Raw camera images</p>
@@ -121,3 +86,4 @@ export default function WhatAreTopics() {
     </div>
   );
 }
+

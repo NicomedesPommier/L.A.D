@@ -20,6 +20,9 @@ import VdCenterOfRotation from "../levels/VdCenterOfRotation";
 import VdAckermann from "../levels/VdAckermann";
 import VdBicycleModel from "../levels/VdBicycleModel";
 import VdSimulations from "../levels/VdSimulations";
+import VdWeightLoad from "../levels/VdWeightLoad";
+import VdSuspensionDrivetrain from "../levels/VdSuspensionDrivetrain";
+import VdAdvancedDynamics from "../levels/VdAdvancedDynamics";
 // ROS2 Concepts Levels
 import Ros2NodesIntro from "../levels/Ros2NodesIntro";
 import Ros2Topics from "../levels/Ros2Topics";
@@ -40,6 +43,11 @@ import TfImportance from "../levels/TfImportance";
 import TfSensorAlignment from "../levels/TfSensorAlignment";
 import TfRobotNavigation from "../levels/TfRobotNavigation";
 import TfPracticalExamples from "../levels/TfPracticalExamples";
+// Perception Unit Levels
+import PerceptionLibraries from "../levels/PerceptionLibraries";
+import PerceptionObstacle from "../levels/PerceptionObstacle";
+import PerceptionLane from "../levels/PerceptionLane";
+import PerceptionTasks from "../levels/PerceptionTasks";
 
 const DEBUG = true;
 
@@ -57,6 +65,9 @@ const REGISTRY = Object.freeze({
   "vd-ackermann": VdAckermann,
   "vd-bicycle-model": VdBicycleModel,
   "vd-simulations": VdSimulations,
+  "vd-weight-load": VdWeightLoad,
+  "vd-suspension-drivetrain": VdSuspensionDrivetrain,
+  "vd-advanced-dynamics": VdAdvancedDynamics,
   // ROS2 Concepts Unit Levels
   "ros2-nodes-intro": Ros2NodesIntro,
   "ros2-topics": Ros2Topics,
@@ -77,6 +88,11 @@ const REGISTRY = Object.freeze({
   "tf-sensor-alignment": TfSensorAlignment,
   "tf-robot-navigation": TfRobotNavigation,
   "tf-practical-examples": TfPracticalExamples,
+  // Perception Unit Levels
+  "perception-libraries": PerceptionLibraries,
+  "perception-obstacle": PerceptionObstacle,
+  "perception-lane": PerceptionLane,
+  "perception-tasks": PerceptionTasks,
 });
 
 export default function LearnLevel() {

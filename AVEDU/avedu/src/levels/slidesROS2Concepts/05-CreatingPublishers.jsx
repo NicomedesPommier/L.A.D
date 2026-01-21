@@ -302,11 +302,11 @@ function CreatingPublishersInner({ onObjectiveHit }) {
   // Show loading state
   if (workspaceLoading) {
     return (
-      <div className="slide-wrap" style={{ display: "grid", gap: "0.75rem", placeItems: "center", minHeight: "400px" }}>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: "2em", marginBottom: "1rem" }}>⏳</div>
+      <div className="slide-wrap slide-center slide-h-400">
+        <div className="slide-text--center">
+          <div className="slide-text--3xl slide-mb-md">⏳</div>
           <h3>Loading ROS2 Workspace...</h3>
-          <p style={{ opacity: 0.7 }}>Please wait while we connect to your workspace</p>
+          <p className="slide-muted">Please wait while we connect to your workspace</p>
         </div>
       </div>
     );
@@ -315,11 +315,11 @@ function CreatingPublishersInner({ onObjectiveHit }) {
   // Show error state with retry option
   if (workspaceError) {
     return (
-      <div className="slide-wrap" style={{ display: "grid", gap: "0.75rem", placeItems: "center", minHeight: "400px" }}>
-        <div style={{ textAlign: "center", maxWidth: "500px" }}>
-          <div style={{ fontSize: "2em", marginBottom: "1rem" }}>⚠️</div>
+      <div className="slide-wrap slide-center slide-h-400">
+        <div className="slide-text--center slide-max-w-500">
+          <div className="slide-text--3xl slide-mb-md">⚠️</div>
           <h3>Workspace Error</h3>
-          <p style={{ opacity: 0.7, margin: "1rem 0" }}>{workspaceError}</p>
+          <p className="slide-muted slide-my-md">{workspaceError}</p>
           <button className="btn btn--primary" onClick={retry}>
             🔄 Retry Connection
           </button>
@@ -329,27 +329,15 @@ function CreatingPublishersInner({ onObjectiveHit }) {
   }
 
   return (
-    <div className="slide-wrap" style={{ display: "flex", flexDirection: "column", gap: "0.75rem", height: "100%" }}>
+    <div className="slide-wrap slide-flex slide-flex--col slide-gap-md slide-h-full">
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+      <div className="slide-flex slide-flex--between slide-items-center slide-mb-sm">
         <div>
-          <h2 style={{ margin: 0, marginBottom: "0.25rem" }}>{meta.title}</h2>
-          <p style={{ margin: 0, fontSize: "0.9em", opacity: 0.8 }}>
+          <h2 className="slide-mb-xs">{meta.title}</h2>
+          <p className="slide-text--sm slide-muted slide-m-0">
             Build and test ROS2 publishers visually
             {loadedFromCache && (
-              <span
-                style={{
-                  marginLeft: "0.5rem",
-                  padding: "0.15rem 0.4rem",
-                  background: "rgba(125, 249, 255, 0.15)",
-                  border: "1px solid var(--neon)",
-                  borderRadius: "4px",
-                  color: "var(--neon)",
-                  fontSize: "0.85em",
-                  fontWeight: "600",
-                }}
-                title="Files loaded from cache for instant access"
-              >
+              <span className="slide-badge slide-badge--neon slide-ml-sm">
                 ⚡ CACHED
               </span>
             )}
@@ -357,26 +345,16 @@ function CreatingPublishersInner({ onObjectiveHit }) {
         </div>
 
         {/* Mode Tabs */}
-        <div style={{ display: "flex", gap: "0.5rem" }}>
+        <div className="slide-flex slide-gap-sm">
           <button
-            className="btn btn--small"
+            className={mode === "canvas" ? "btn btn--sm btn--primary" : "btn btn--sm"}
             onClick={() => setMode("canvas")}
-            style={{
-              background: mode === "canvas" ? "var(--neon, #7df9ff)" : "rgba(255,255,255,.06)",
-              color: mode === "canvas" ? "#000" : "inherit",
-              fontWeight: mode === "canvas" ? "600" : "normal",
-            }}
           >
             🎨 Visual Editor
           </button>
           <button
-            className="btn btn--small"
+            className={mode === "terminal" ? "btn btn--sm btn--primary" : "btn btn--sm"}
             onClick={() => setMode("terminal")}
-            style={{
-              background: mode === "terminal" ? "var(--neon, #7df9ff)" : "rgba(255,255,255,.06)",
-              color: mode === "terminal" ? "#000" : "inherit",
-              fontWeight: mode === "terminal" ? "600" : "normal",
-            }}
           >
             💻 Terminal
           </button>
@@ -385,54 +363,28 @@ function CreatingPublishersInner({ onObjectiveHit }) {
 
       {/* Status Bar */}
       {status && (
-        <div style={{
-          padding: "0.75rem 1rem",
-          background: status.includes("✅")
-            ? "rgba(0, 255, 0, 0.1)"
-            : status.includes("❌") || status.includes("⚠")
-            ? "rgba(255, 100, 100, 0.1)"
-            : "rgba(125, 249, 255, 0.1)",
-          border: `1px solid ${
-            status.includes("✅")
-              ? "rgba(0, 255, 0, 0.3)"
-              : status.includes("❌") || status.includes("⚠")
-              ? "rgba(255, 100, 100, 0.3)"
-              : "rgba(125, 249, 255, 0.3)"
-          }`,
-          borderRadius: "6px",
-          fontSize: "0.9em",
-          fontWeight: "500",
-        }}>
+        <div className={`slide-badge slide-w-full ${status.includes("✅") ? "slide-badge--success" : status.includes("⚠") ? "slide-badge--warn" : "slide-badge--info"}`}>
           {status}
         </div>
       )}
 
       {/* Main Content Area */}
-      <div style={{ flex: 1, display: "grid", gridTemplateColumns: "2fr 1fr", gap: "1rem", minHeight: 0 }}>
+      <div className="slide-grid slide-grid--60-40 slide-gap-md slide-flex-1 slide-min-h-0">
         {/* Left Panel: Canvas/Terminal */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", minHeight: 0 }}>
+        <div className="slide-flex slide-flex--col slide-gap-md slide-min-h-0">
           {mode === "terminal" ? (
-            <>
-              {/* Terminal View */}
-              <div style={{
-                flex: 1,
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-                borderRadius: "8px",
-                overflow: "hidden",
-                background: "rgba(0, 0, 0, 0.3)",
-              }}>
-                <Terminal
-                  onCommandExecute={handleCommandExecute}
-                  workingDirectory="/workspace"
-                  username="ros-learner"
-                  canvasId={canvasId || "loading"}
-                />
-              </div>
-            </>
+            <div className="slide-terminal-wrapper slide-flex-1">
+              <Terminal
+                onCommandExecute={handleCommandExecute}
+                workingDirectory="/workspace"
+                username="ros-learner"
+                canvasId={canvasId || "loading"}
+              />
+            </div>
           ) : (
             <>
               {/* Palette */}
-              <div style={{ borderRadius: "6px", overflow: "hidden" }}>
+              <div className="slide-rounded slide-overflow-hidden">
                 <CategorizedPalette
                   categories={ros2PublisherPalette}
                   defaultCategory="ROS2"
@@ -440,14 +392,7 @@ function CreatingPublishersInner({ onObjectiveHit }) {
               </div>
 
               {/* Canvas */}
-              <div style={{
-                flex: 1,
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-                borderRadius: "8px",
-                overflow: "hidden",
-                background: "rgba(0, 0, 0, 0.3)",
-                minHeight: 400,
-              }}>
+              <div className="rfp-wrap slide-flex-1 slide-relative slide-rounded slide-border slide-bg-surface-glass slide-min-h-400">
                 <BlockCanvas
                   initialNodes={[]}
                   initialEdges={[]}
@@ -462,11 +407,6 @@ function CreatingPublishersInner({ onObjectiveHit }) {
                 className="btn btn--primary"
                 onClick={createPublisherFile}
                 disabled={!canvasId || nodes.length === 0 || loading}
-                style={{
-                  padding: "0.75rem 1.5rem",
-                  fontSize: "1rem",
-                  fontWeight: "600",
-                }}
               >
                 {loading ? "⏳ Creating..." : "📄 Generate Publisher Code"}
               </button>
@@ -475,15 +415,15 @@ function CreatingPublishersInner({ onObjectiveHit }) {
         </div>
 
         {/* Right Panel: Info & Files */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", minHeight: 0 }}>
+        <div className="slide-flex slide-flex--col slide-gap-md slide-min-h-0">
           {mode === "canvas" ? (
             <>
               {/* Instructions */}
-              <div className="slide-card" style={{ padding: "1rem" }}>
-                <div className="slide-card__title" style={{ fontSize: "1em", marginBottom: "0.75rem" }}>
+              <div className="slide-card slide-p-md">
+                <div className="slide-card__title slide-text--sm slide-mb-md">
                   📚 Quick Start
                 </div>
-                <ol style={{ fontSize: "0.85em", lineHeight: "1.8", margin: 0, paddingLeft: "1.5rem" }}>
+                <ol className="slide-list-ordered slide-text--sm">
                   <li>Drag a <b>ROS2 Publisher</b> block to the canvas</li>
                   <li>Configure topic name, message type, and frequency</li>
                   <li>Optionally connect a <b>Text/Data</b> block for custom data</li>
@@ -493,21 +433,8 @@ function CreatingPublishersInner({ onObjectiveHit }) {
               </div>
 
               {/* File Explorer */}
-              <div style={{
-                flex: 1,
-                border: "1px solid rgba(255, 255, 255, 0.2)",
-                borderRadius: "8px",
-                overflow: "hidden",
-                background: "rgba(0, 0, 0, 0.2)",
-                minHeight: 200,
-              }}>
-                <div style={{
-                  padding: "0.75rem 1rem",
-                  background: "rgba(255, 255, 255, 0.05)",
-                  borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
-                  fontSize: "0.9em",
-                  fontWeight: "600",
-                }}>
+              <div className="slide-flex-1 slide-border slide-rounded slide-overflow-hidden slide-bg-surface-glass slide-min-h-200">
+                <div className="slide-header-sm">
                   📁 Workspace Files
                 </div>
                 <FileExplorer
@@ -519,65 +446,61 @@ function CreatingPublishersInner({ onObjectiveHit }) {
               </div>
 
               {/* Publisher Info */}
-              <div className="slide-card slide-card--aside" style={{ padding: "0.75rem 1rem" }}>
-                <div className="slide-card__title" style={{ fontSize: "0.9em", marginBottom: "0.5rem" }}>
+              <div className="slide-card slide-card--aside slide-p-md">
+                <div className="slide-card__title slide-text--sm slide-mb-sm">
                   💡 Message Types
                 </div>
-                <div style={{ fontSize: "0.75em", lineHeight: "1.6", opacity: 0.9 }}>
-                  <p style={{ margin: "0.25rem 0" }}><b>std_msgs:</b> String, Int32, Float64, Bool...</p>
-                  <p style={{ margin: "0.25rem 0" }}><b>geometry_msgs:</b> Twist, Pose, Point...</p>
-                  <p style={{ margin: "0.25rem 0" }}><b>sensor_msgs:</b> Image, LaserScan, Imu...</p>
+                <div className="slide-text--xs slide-muted">
+                  <p className="slide-my-xs"><b>std_msgs:</b> String, Int32, Float64, Bool...</p>
+                  <p className="slide-my-xs"><b>geometry_msgs:</b> Twist, Pose, Point...</p>
+                  <p className="slide-my-xs"><b>sensor_msgs:</b> Image, LaserScan, Imu...</p>
                 </div>
               </div>
             </>
           ) : (
             <>
               {/* Terminal Instructions */}
-              <div className="slide-card" style={{ padding: "1rem" }}>
-                <div className="slide-card__title" style={{ fontSize: "1em", marginBottom: "0.75rem" }}>
+              <div className="slide-card slide-p-md">
+                <div className="slide-card__title slide-text--sm slide-mb-md">
                   🧪 Testing Your Publisher
                 </div>
-                <p style={{ fontSize: "0.85em", lineHeight: "1.6", margin: "0.5rem 0" }}>
+                <p className="slide-text--sm slide-my-sm">
                   Run these commands in the terminal to test your publisher:
                 </p>
               </div>
 
               {/* Commands Reference */}
-              <div className="slide-card" style={{ padding: "1rem", flex: 1, background: "rgba(0,0,0,0.3)" }}>
-                <div className="slide-card__title" style={{ fontSize: "0.9em", marginBottom: "0.75rem" }}>
+              <div className="slide-card slide-flex-1 slide-p-md slide-bg-surface-glass">
+                <div className="slide-card__title slide-text--sm slide-mb-md">
                   ⌨️ Common Commands
                 </div>
-                <div style={{ fontSize: "0.8em", lineHeight: "2", fontFamily: "monospace" }}>
-                  <div style={{ marginBottom: "0.5rem" }}>
-                    <div style={{ opacity: 0.7, fontSize: "0.9em" }}>Run your publisher:</div>
-                    <code style={{ color: "var(--neon)" }}>python3 publisher_node.py</code>
+                <div className="slide-code-wrapper slide-text--xs">
+                  <div className="slide-mb-sm">
+                    <div className="slide-muted slide-text--xs">Run your publisher:</div>
+                    <code className="slide-code-inline slide-text--neon">python3 publisher_node.py</code>
                   </div>
-                  <div style={{ marginBottom: "0.5rem" }}>
-                    <div style={{ opacity: 0.7, fontSize: "0.9em" }}>List active topics:</div>
-                    <code style={{ color: "var(--neon)" }}>ros2 topic list</code>
+                  <div className="slide-mb-sm">
+                    <div className="slide-muted slide-text--xs">List active topics:</div>
+                    <code className="slide-code-inline slide-text--neon">ros2 topic list</code>
                   </div>
-                  <div style={{ marginBottom: "0.5rem" }}>
-                    <div style={{ opacity: 0.7, fontSize: "0.9em" }}>Listen to messages:</div>
-                    <code style={{ color: "var(--neon)" }}>ros2 topic echo /chatter</code>
+                  <div className="slide-mb-sm">
+                    <div className="slide-muted slide-text--xs">Listen to messages:</div>
+                    <code className="slide-code-inline slide-text--neon">ros2 topic echo /chatter</code>
                   </div>
-                  <div style={{ marginBottom: "0.5rem" }}>
-                    <div style={{ opacity: 0.7, fontSize: "0.9em" }}>Check publish rate:</div>
-                    <code style={{ color: "var(--neon)" }}>ros2 topic hz /chatter</code>
-                  </div>
-                  <div>
-                    <div style={{ opacity: 0.7, fontSize: "0.9em" }}>Topic information:</div>
-                    <code style={{ color: "var(--neon)" }}>ros2 topic info /chatter</code>
+                  <div className="slide-mb-sm">
+                    <div className="slide-muted slide-text--xs">Topic information:</div>
+                    <code className="slide-code-inline slide-text--neon">ros2 topic info /chatter</code>
                   </div>
                 </div>
               </div>
 
               {/* Testing Tips */}
-              <div className="slide-card slide-card--aside" style={{ padding: "0.75rem 1rem" }}>
-                <div className="slide-card__title" style={{ fontSize: "0.9em", marginBottom: "0.5rem" }}>
+              <div className="slide-card slide-card--aside slide-p-md">
+                <div className="slide-card__title slide-text--sm slide-mb-sm">
                   ✅ Testing Tips
                 </div>
-                <ul style={{ fontSize: "0.75em", margin: 0, paddingLeft: "1.2rem", lineHeight: "1.6" }}>
-                  <li>Press <kbd>Ctrl+C</kbd> to stop the publisher</li>
+                <ul className="slide-list slide-text--xs">
+                  <li>Press <kbd className="slide-kbd">Ctrl+C</kbd> to stop the publisher</li>
                   <li>Use multiple terminals to run publisher and subscriber</li>
                   <li>Check <code>ls</code> to verify your file was created</li>
                 </ul>
@@ -597,3 +520,4 @@ export default function CreatingPublishers(props) {
     </ReactFlowProvider>
   );
 }
+

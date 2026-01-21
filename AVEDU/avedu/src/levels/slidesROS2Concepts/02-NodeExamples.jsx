@@ -48,24 +48,17 @@ export default function NodeExamples() {
 
       <div className="slide-card">
         <div className="slide-card__title">Common ROS 2 Nodes in Autonomous Vehicles</div>
-        <p>
-          Here are typical nodes you might find in an autonomous vehicle system:
-        </p>
+        <p>Here are typical nodes you might find in an autonomous vehicle system:</p>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: "1rem" }}>
+      <div className="slide-grid slide-grid--30-70">
         {/* Node selector */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        <div className="slide-flex slide-flex--col slide-gap-sm">
           {examples.map((ex, idx) => (
             <button
               key={idx}
-              className="btn"
+              className={selected === idx ? "btn btn--primary" : "btn"}
               onClick={() => setSelected(idx)}
-              style={{
-                opacity: selected === idx ? 1 : 0.6,
-                background: selected === idx ? "var(--neon, #7df9ff)" : "var(--glass, rgba(255,255,255,.06))",
-                color: selected === idx ? "#000" : "inherit",
-              }}
             >
               {ex.name}
             </button>
@@ -75,22 +68,18 @@ export default function NodeExamples() {
         {/* Node details */}
         <div className="slide-card">
           <div className="slide-card__title">{examples[selected].name}</div>
-          <div style={{ display: "grid", gap: "0.75rem" }}>
+          <div className="slide-gap-md">
             <div>
               <b>Purpose:</b>
               <p>{examples[selected].purpose}</p>
             </div>
             <div>
               <b>Publishes:</b>
-              <p style={{ fontFamily: "monospace", fontSize: "0.9em" }}>
-                {examples[selected].publishes}
-              </p>
+              <code className="slide-text--sm">{examples[selected].publishes}</code>
             </div>
             <div>
               <b>Subscribes:</b>
-              <p style={{ fontFamily: "monospace", fontSize: "0.9em" }}>
-                {examples[selected].subscribes}
-              </p>
+              <code className="slide-text--sm">{examples[selected].subscribes}</code>
             </div>
             <div className="slide-callout slide-callout--info">
               <b>Example:</b> {examples[selected].example}
@@ -99,7 +88,7 @@ export default function NodeExamples() {
         </div>
       </div>
 
-      <div className="slide-card" style={{ marginTop: "1rem" }}>
+      <div className="slide-card slide-mt-lg">
         <div className="slide-card__title">Node Communication</div>
         <p>
           Notice how nodes form a <b>data pipeline</b>: Camera → Object Detection → Motion Planner → Motor Controller.
@@ -109,3 +98,4 @@ export default function NodeExamples() {
     </div>
   );
 }
+

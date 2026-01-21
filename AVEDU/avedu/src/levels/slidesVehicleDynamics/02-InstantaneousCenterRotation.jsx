@@ -323,7 +323,7 @@ export default function InstantaneousCenterRotation() {
         </p>
       </div>
 
-      <div className="slide-card" style={{ marginTop: ".75rem" }}>
+      <div className="slide-card slide-mt-md">
         <div className="slide-card__title">Key Formula</div>
         <div className="slide-code">
           R = L / tan(δ)
@@ -335,10 +335,10 @@ export default function InstantaneousCenterRotation() {
         </div>
       </div>
 
-      <div className="slide-card" style={{ marginTop: ".75rem" }}>
+      <div className="slide-card slide-mt-md">
         <div className="slide-card__title">Interactive Simulation</div>
 
-        <div style={{ position: "relative" }}>
+        <div>
           <ICRVisualization
             wheelbase={wheelbase}
             trackWidth={trackWidth}
@@ -349,7 +349,7 @@ export default function InstantaneousCenterRotation() {
             pathHistory={pathHistory}
           />
 
-          <div className="slide-controls" style={{ marginTop: ".75rem" }}>
+          <div className="slide-controls slide-mt-md">
             <div className="slide-slider">
               <span className="slide-slider__label">
                 Steering: <span className="slide-slider__value">{steeringAngle}°</span>
@@ -395,65 +395,37 @@ export default function InstantaneousCenterRotation() {
               />
             </div>
 
-            <div style={{ display: "flex", gap: ".4rem", marginTop: ".25rem" }}>
+            <div className="slide-flex slide-gap-sm slide-mt-sm">
               <button
                 onClick={handlePlayPause}
-                style={{
-                  flex: 1,
-                  padding: ".5rem .75rem",
-                  background: isPlaying ? "#ff5cf4" : "#7df9ff",
-                  color: "#0a0e1a",
-                  border: "none",
-                  borderRadius: "5px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  fontSize: "11px",
-                  transition: "all 0.2s"
-                }}
+                className={isPlaying ? "btn btn--pause btn--sm" : "btn btn--play btn--sm"}
+                style={{ flex: 1 }}
               >
                 {isPlaying ? "⏸ Pause" : "▶ Play"}
               </button>
               <button
                 onClick={handleReset}
-                style={{
-                  padding: ".5rem .75rem",
-                  background: "#a8b3d1",
-                  color: "#0a0e1a",
-                  border: "none",
-                  borderRadius: "5px",
-                  fontWeight: "600",
-                  cursor: "pointer",
-                  fontSize: "11px",
-                  transition: "all 0.2s"
-                }}
+                className="btn btn--reset btn--sm"
               >
                 ↺ Reset
               </button>
             </div>
 
             {isPlaying && (
-              <div style={{
-                padding: ".5rem",
-                background: "rgba(125, 249, 255, 0.08)",
-                borderRadius: "4px",
-                fontSize: "10px",
-                color: "#7df9ff",
-                borderLeft: "2px solid #7df9ff",
-                marginTop: ".25rem"
-              }}>
+              <div className="slide-tip slide-mt-sm">
                 <strong>Tip:</strong> Change the steering angle while driving to see the ICR shift in real-time!
               </div>
             )}
           </div>
         </div>
 
-        <p style={{ marginTop: "1rem", fontSize: "13px", color: "#a8b3d1", fontStyle: "italic" }}>
+        <p className="slide-mt-lg slide-text--sm slide-muted slide-text--italic">
           The pink dot shows the ICR location, and the cyan circle shows the turning radius.
           The blue trail shows the car's path.
         </p>
       </div>
 
-      <div className="slide-callout slide-callout--info" style={{ marginTop: ".75rem" }}>
+      <div className="slide-callout slide-callout--info slide-mt-md">
         <b>Key Insight:</b> When the steering angle is zero (straight ahead), the ICR is at infinity.
         As you increase the steering angle, the turning radius decreases and the ICR moves closer to the vehicle.
       </div>

@@ -578,6 +578,36 @@
   }
 },
 {
+  "model": "learning.level",
+  "pk": "vd-weight-load",
+  "fields": {
+    "unit": "vehicle-dynamics",
+    "title": "Weight Distribution & Load Transfer",
+    "order": 6,
+    "is_active": true
+  }
+},
+{
+  "model": "learning.level",
+  "pk": "vd-suspension-drivetrain",
+  "fields": {
+    "unit": "vehicle-dynamics",
+    "title": "Suspension & Drivetrain",
+    "order": 7,
+    "is_active": true
+  }
+},
+{
+  "model": "learning.level",
+  "pk": "vd-advanced-dynamics",
+  "fields": {
+    "unit": "vehicle-dynamics",
+    "title": "Advanced Vehicle Dynamics",
+    "order": 8,
+    "is_active": true
+  }
+},
+{
   "model": "learning.objective",
   "pk": 1,
   "fields": {
@@ -1105,6 +1135,116 @@
     "code": "tf-practical-3",
     "description": "Apply advanced TF techniques",
     "points": 15
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 54,
+  "fields": {
+    "level": "perception-libraries",
+    "code": "PERC_LIBRARIES_INTRO",
+    "description": "Understand perception libraries and their role in AVs",
+    "points": 15
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 55,
+  "fields": {
+    "level": "perception-libraries",
+    "code": "PERC_OPENCV_BASICS",
+    "description": "Learn OpenCV basics for ROS 2 image processing",
+    "points": 20
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 56,
+  "fields": {
+    "level": "perception-tasks",
+    "code": "PERC_TASKS_COMPLETE",
+    "description": "Complete the perception tasks overview",
+    "points": 25
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 57,
+  "fields": {
+    "level": "vd-weight-load",
+    "code": "VD_WEIGHT_DIST",
+    "description": "Understand weight distribution and CG effects",
+    "points": 20
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 58,
+  "fields": {
+    "level": "vd-weight-load",
+    "code": "VD_LOAD_TRANSFER",
+    "description": "Master load transfer dynamics during maneuvers",
+    "points": 25
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 59,
+  "fields": {
+    "level": "vd-suspension-drivetrain",
+    "code": "VD_SUSPENSION",
+    "description": "Understand suspension basics and body motions",
+    "points": 20
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 60,
+  "fields": {
+    "level": "vd-suspension-drivetrain",
+    "code": "VD_DRIVETRAIN",
+    "description": "Learn FWD/RWD/AWD dynamics and torque distribution",
+    "points": 25
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 61,
+  "fields": {
+    "level": "vd-advanced-dynamics",
+    "code": "VD_STEERING_GEOM",
+    "description": "Master toe, camber, and caster geometry",
+    "points": 20
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 62,
+  "fields": {
+    "level": "vd-advanced-dynamics",
+    "code": "VD_AERO",
+    "description": "Understand aerodynamic forces and effects",
+    "points": 15
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 63,
+  "fields": {
+    "level": "vd-advanced-dynamics",
+    "code": "VD_DISTURBANCES",
+    "description": "Learn about real-world disturbances (friction, wind, grade)",
+    "points": 20
+  }
+},
+{
+  "model": "learning.objective",
+  "pk": 64,
+  "fields": {
+    "level": "vd-advanced-dynamics",
+    "code": "VD_STABILITY",
+    "description": "Master dynamic stability concepts and phase plane analysis",
+    "points": 30
   }
 }
 ]

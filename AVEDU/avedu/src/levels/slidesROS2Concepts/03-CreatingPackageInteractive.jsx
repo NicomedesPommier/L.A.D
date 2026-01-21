@@ -7,6 +7,7 @@ import BlockCanvas from "../../components/ide/BlockCanvas";
 import { CategorizedPalette, defaultDataFor } from "../../components/blocks";
 import { executeCommand } from "../../services/fileApi";
 import useROS2Workspace from "../../hooks/useROS2Workspace";
+import { SlideCodeSnippet } from "../../components/slides/SlideLayout";
 import "../../styles/_rosflow.scss";
 
 export const meta = {
@@ -153,11 +154,6 @@ function CreatingPackageInteractiveInner({ onObjectiveHit }) {
       }
     } catch (error) {
       console.error("[Package Creator] Failed to create package:", error);
-      console.error("[Package Creator] Error details:", {
-        message: error.message,
-        response: error.response,
-        stack: error.stack
-      });
       setStatus(`⚠ Error: ${error.message}`);
     }
   }, [canvasId, packageCreated, onObjectiveHit]);
@@ -215,11 +211,11 @@ function CreatingPackageInteractiveInner({ onObjectiveHit }) {
   // Show loading state
   if (workspaceLoading) {
     return (
-      <div className="slide-wrap" style={{ display: "grid", gap: "0.75rem", placeItems: "center", minHeight: "400px" }}>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: "2em", marginBottom: "1rem" }}>⏳</div>
+      <div className="slide-wrap slide-center slide-h-400">
+        <div className="slide-text--center">
+          <div className="slide-text--3xl slide-mb-md">⏳</div>
           <h3>Loading ROS2 Workspace...</h3>
-          <p style={{ opacity: 0.7 }}>Please wait while we connect to your workspace</p>
+          <p className="slide-muted">Please wait while we connect to your workspace</p>
         </div>
       </div>
     );
@@ -228,11 +224,11 @@ function CreatingPackageInteractiveInner({ onObjectiveHit }) {
   // Show error state with retry option
   if (workspaceError) {
     return (
-      <div className="slide-wrap" style={{ display: "grid", gap: "0.75rem", placeItems: "center", minHeight: "400px" }}>
-        <div style={{ textAlign: "center", maxWidth: "500px" }}>
-          <div style={{ fontSize: "2em", marginBottom: "1rem" }}>⚠️</div>
+      <div className="slide-wrap slide-center slide-h-400">
+        <div className="slide-text--center slide-max-w-500">
+          <div className="slide-text--3xl slide-mb-md">⚠️</div>
           <h3>Workspace Error</h3>
-          <p style={{ opacity: 0.7, margin: "1rem 0" }}>{workspaceError}</p>
+          <p className="slide-muted slide-my-md">{workspaceError}</p>
           <button className="btn btn--primary" onClick={retry}>
             🔄 Retry Connection
           </button>
@@ -242,7 +238,7 @@ function CreatingPackageInteractiveInner({ onObjectiveHit }) {
   }
 
   return (
-    <div className="slide-wrap" style={{ display: "grid", gap: "0.75rem" }}>
+    <div className="slide-wrap slide-gap-md">
       <h2>{meta.title}</h2>
 
       <div className="slide-card">
@@ -251,64 +247,42 @@ function CreatingPackageInteractiveInner({ onObjectiveHit }) {
           Connect the <b>Package Name</b>, <b>Node Name</b>, and <b>Dependencies</b> to the <b>Create Package</b> block,
           then connect it to <b>Generate Command</b> to automatically create a ROS 2 package in Docker!
         </p>
-        <p style={{ fontSize: "0.9em", opacity: 0.8, marginTop: "0.5rem" }}>
+        <p className="slide-text--sm slide-muted slide-mt-sm">
           This will execute <code>ros2 pkg create</code> with your configuration.
         </p>
-        <p style={{ fontSize: "0.9em", opacity: 0.8, marginTop: "0.5rem" }}>
+        <p className="slide-text--sm slide-muted slide-mt-sm">
           💡 Workspace <b>"{workspace?.name}"</b> is shared across all ROS2 lessons. Files you create here persist!
         </p>
       </div>
 
       {/* Mode Selector & Status */}
-      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+      <div className="slide-flex slide-flex--wrap slide-gap-sm slide-items-center">
         <button
-          className="btn"
+          className={mode === "canvas" ? "btn btn--primary" : "btn"}
           onClick={() => setMode("canvas")}
-          style={{
-            opacity: mode === "canvas" ? 1 : 0.6,
-            background: mode === "canvas" ? "var(--neon, #7df9ff)" : "var(--glass, rgba(255,255,255,.06))",
-            color: mode === "canvas" ? "#000" : "inherit",
-          }}
         >
           Canvas Mode
         </button>
         <button
-          className="btn"
+          className={mode === "terminal" ? "btn btn--primary" : "btn"}
           onClick={() => setMode("terminal")}
-          style={{
-            opacity: mode === "terminal" ? 1 : 0.6,
-            background: mode === "terminal" ? "var(--neon, #7df9ff)" : "var(--glass, rgba(255,255,255,.06))",
-            color: mode === "terminal" ? "#000" : "inherit",
-          }}
         >
           Terminal Mode
         </button>
 
         {status && (
-          <div style={{
-            flex: 1,
-            padding: "0.5rem 1rem",
-            background: packageCreated ? "rgba(0, 255, 0, 0.1)" : "rgba(255, 255, 255, 0.05)",
-            border: `1px solid ${packageCreated ? "rgba(0, 255, 0, 0.3)" : "rgba(255, 255, 255, 0.1)"}`,
-            borderRadius: "4px",
-            fontSize: "0.9em",
-          }}>
+          <div className={`slide-badge slide-flex-1 ${packageCreated ? "slide-badge--success" : "slide-badge--info"}`}>
             {status}
           </div>
         )}
       </div>
 
       {/* Main Content */}
-      <div style={{ display: "grid", gridTemplateColumns: "1.2fr 0.8fr", gap: "1rem", minHeight: 500, maxWidth: "100%" }}>
+      <div className="slide-grid slide-grid--60-40 slide-gap-md slide-h-500">
         {/* Left: Canvas or Terminal */}
-        <div style={{ display: "flex", flexDirection: "column", minHeight: 0, maxWidth: "100%" }}>
+        <div className="slide-flex slide-flex--col slide-h-full">
           {mode === "terminal" ? (
-            <div style={{
-              border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: "8px",
-              overflow: "hidden",
-              height: 500,
-            }}>
+            <div className="slide-terminal-wrapper slide-h-full">
               <Terminal
                 onCommandExecute={handleCommandExecute}
                 workingDirectory="/workspace"
@@ -317,13 +291,13 @@ function CreatingPackageInteractiveInner({ onObjectiveHit }) {
               />
             </div>
           ) : (
-            <div className="rfp-wrap" style={{ display: "flex", flexDirection: "column", height: 500 }}>
+            <div className="rfp-wrap slide-flex slide-flex--col slide-h-full">
               <CategorizedPalette
                 categories={ros2PackagePalette}
                 defaultCategory="ROS Inputs"
               />
 
-              <div style={{ flex: 1, minHeight: 0 }}>
+              <div className="slide-flex-1 slide-relative">
                 <BlockCanvas
                   initialNodes={initialNodes}
                   initialEdges={[]}
@@ -333,23 +307,12 @@ function CreatingPackageInteractiveInner({ onObjectiveHit }) {
               </div>
 
               {packageCreated && !packageBuilt && (
-                <div style={{
-                  padding: "0.75rem",
-                  background: "rgba(255, 200, 0, 0.1)",
-                  borderTop: "1px solid rgba(255, 200, 0, 0.3)",
-                  textAlign: "center",
-                  fontSize: "0.9em",
-                }}>
-                  ⚠️ Next step: Switch to Terminal and run <code style={{padding: "2px 6px", background: "rgba(0,0,0,0.3)", borderRadius: "3px"}}>colcon build</code>
+                <div className="slide-callout slide-callout--warn slide-text--center">
+                  ⚠️ Next step: Switch to Terminal and run <code className="slide-code-inline">colcon build</code>
                 </div>
               )}
               {packageBuilt && (
-                <div style={{
-                  padding: "0.75rem",
-                  background: "rgba(0, 255, 0, 0.1)",
-                  borderTop: "1px solid rgba(0, 255, 0, 0.3)",
-                  textAlign: "center",
-                }}>
+                <div className="slide-callout slide-callout--success slide-text--center">
                   ✅ Package built! You can now proceed to the next lesson to create publishers.
                 </div>
               )}
@@ -358,69 +321,36 @@ function CreatingPackageInteractiveInner({ onObjectiveHit }) {
         </div>
 
         {/* Right: Command Preview & Instructions */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", minHeight: 0, maxWidth: "100%", overflow: "hidden" }}>
-          <div className="slide-card" style={{ padding: "0.75rem" }}>
-            <div className="slide-card__title" style={{ fontSize: "0.95em" }}>Step-by-Step Workflow</div>
-            <ol style={{ fontSize: "0.85em", lineHeight: "1.6", margin: 0, paddingLeft: "1.25rem" }}>
-              <li style={{opacity: currentStep >= 1 ? 1 : 0.5}}>
+        <div className="slide-flex slide-flex--col slide-gap-md slide-h-full slide-overflow-hidden">
+          <div className="slide-card slide-p-md">
+            <div className="slide-card__title slide-text--sm">Step-by-Step Workflow</div>
+            <ol className="slide-list-ordered slide-text--sm">
+              <li style={{ opacity: currentStep >= 1 ? 1 : 0.5 }}>
                 {currentStep > 1 ? "✅" : "📝"} Edit <b>Package Name</b> and <b>Node Name</b>
               </li>
-              <li style={{opacity: currentStep >= 1 ? 1 : 0.5}}>
+              <li style={{ opacity: currentStep >= 1 ? 1 : 0.5 }}>
                 {currentStep > 1 ? "✅" : "📝"} Connect blocks and click "Run in Terminal"
               </li>
-              <li style={{opacity: currentStep >= 2 ? 1 : 0.5, fontWeight: currentStep === 2 ? "bold" : "normal"}}>
+              <li style={{ opacity: currentStep >= 2 ? 1 : 0.5, fontWeight: currentStep === 2 ? "bold" : "normal" }}>
                 {currentStep > 2 ? "✅" : currentStep === 2 ? "⏳" : "⏹"} Switch to Terminal and run <code>colcon build</code>
               </li>
-              <li style={{opacity: currentStep >= 3 ? 1 : 0.5}}>
+              <li style={{ opacity: currentStep >= 3 ? 1 : 0.5 }}>
                 {currentStep >= 3 ? "✅" : "⏹"} Package is ready! Continue to next lesson
               </li>
             </ol>
           </div>
 
-          <div className="slide-card" style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, padding: "0.75rem" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
-              <div className="slide-card__title" style={{ fontSize: "0.95em" }}>Generated Command</div>
-              <button
-                className="btn"
-                onClick={() => navigator.clipboard?.writeText(commandResult.command)}
-                style={{ fontSize: "0.75em", padding: "0.25rem 0.5rem" }}
-                disabled={!commandResult.command}
-              >
-                Copy
-              </button>
-            </div>
-
-            <pre style={{
-              flex: 1,
-              minHeight: 0,
-              maxHeight: "200px",
-              overflow: "auto",
-              background: "rgba(0,0,0,0.4)",
-              border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: "6px",
-              padding: "0.75rem",
-              color: "var(--text, #e6f1ff)",
-              fontFamily: '"Cascadia Code", "Fira Code", Consolas, monospace',
-              fontSize: "0.75em",
-              lineHeight: "1.4",
-              margin: 0,
-              wordBreak: "break-all",
-              whiteSpace: "pre-wrap",
-            }}>
-              {commandResult.command || "# Connect blocks to generate command"}
-            </pre>
+          <div className="slide-card slide-flex-1 slide-flex slide-flex--col slide-p-md">
+            <SlideCodeSnippet
+              title="Generated Command"
+              code={commandResult.command || "# Connect blocks to generate command"}
+              className="slide-flex-1"
+            />
 
             {commandResult.pkgData && (
-              <div style={{
-                marginTop: "0.75rem",
-                padding: "0.5rem",
-                background: "rgba(125, 249, 255, 0.05)",
-                border: "1px solid rgba(125, 249, 255, 0.2)",
-                borderRadius: "6px",
-                fontSize: "0.75em",
-              }}>
-                <b style={{ fontSize: "0.9em" }}>Package Info:</b>
-                <div style={{ marginTop: "0.35rem", display: "grid", gap: "0.2rem" }}>
+              <div className="slide-card slide-card--nested slide-mt-md slide-p-sm slide-text--xs">
+                <b className="slide-text--sm">Package Info:</b>
+                <div className="slide-grid slide-gap-xs slide-mt-xs">
                   <div>• <code>{commandResult.pkgData.pkgName}</code></div>
                   {commandResult.pkgData.nodeName && <div>• Node: <code>{commandResult.pkgData.nodeName}</code></div>}
                   <div>• {commandResult.pkgData.buildType}</div>
@@ -433,29 +363,24 @@ function CreatingPackageInteractiveInner({ onObjectiveHit }) {
       </div>
 
       {packageCreated && !packageBuilt && (
-        <div className="slide-card" style={{
-          background: "rgba(255, 200, 0, 0.1)",
-          border: "2px solid rgba(255, 200, 0, 0.5)"
-        }}>
+        <div className="slide-card slide-card--warn">
           <div className="slide-card__title">📦 Package Created - Now Build It!</div>
           <p>
             Your ROS 2 package has been created in <code>src/{commandResult.pkgData?.pkgName}</code>! The package contains:
           </p>
-          <ul style={{ marginTop: "0.5rem", fontSize: "0.9em" }}>
+          <ul className="slide-list slide-text--sm slide-mt-sm">
             <li>Package structure with <code>package.xml</code></li>
             <li>Build configuration (<code>setup.py</code> or <code>CMakeLists.txt</code>)</li>
             {commandResult.pkgData?.nodeName && <li>Starter node: <code>{commandResult.pkgData.nodeName}</code></li>}
             <li>Dependencies: {commandResult.pkgData?.deps.join(", ")}</li>
           </ul>
-          <div style={{ marginTop: "1rem", padding: "1rem", background: "rgba(0,0,0,0.3)", borderRadius: "6px", border: "1px solid rgba(255,200,0,0.3)" }}>
-            <div style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>⚠️ Next Step: Build the Package</div>
-            <p style={{ fontSize: "0.9em", margin: "0.5rem 0" }}>
+          <div className="slide-tip slide-mt-md">
+            <div className="slide-bold slide-mb-xs">⚠️ Next Step: Build the Package</div>
+            <p className="slide-text--sm slide-my-xs">
               Switch to <b>Terminal Mode</b> and run:
             </p>
-            <code style={{ display: "block", padding: "0.5rem", background: "rgba(0,0,0,0.5)", borderRadius: "4px", fontFamily: "monospace" }}>
-              colcon build
-            </code>
-            <p style={{ fontSize: "0.85em", margin: "0.5rem 0", opacity: 0.9 }}>
+            <code className="slide-code-block">colcon build</code>
+            <p className="slide-text--xs slide-mt-xs slide-muted">
               This compiles your package and makes it ready to use. Wait for "Finished" message.
             </p>
           </div>
@@ -463,17 +388,14 @@ function CreatingPackageInteractiveInner({ onObjectiveHit }) {
       )}
 
       {packageBuilt && (
-        <div className="slide-card" style={{
-          background: "rgba(0, 255, 0, 0.1)",
-          border: "2px solid rgba(0, 255, 0, 0.5)"
-        }}>
+        <div className="slide-card slide-card--success">
           <div className="slide-card__title">🎉 Package Built Successfully!</div>
           <p>
             Your ROS 2 package <code>{commandResult.pkgData?.pkgName}</code> is now compiled and ready to use!
           </p>
-          <div style={{ marginTop: "1rem", padding: "1rem", background: "rgba(0,255,0,0.05)", borderRadius: "6px", border: "1px solid rgba(0,255,0,0.3)" }}>
-            <div style={{ fontWeight: "bold", marginBottom: "0.5rem" }}>✅ You're ready for the next lesson!</div>
-            <p style={{ fontSize: "0.9em", margin: 0 }}>
+          <div className="slide-tip slide-mt-md">
+            <div className="slide-bold slide-mb-xs">✅ You're ready for the next lesson!</div>
+            <p className="slide-text--sm">
               Proceed to "Creating Publishers" to add publisher nodes to your package.
             </p>
           </div>
@@ -490,3 +412,4 @@ export default function CreatingPackageInteractive(props) {
     </ReactFlowProvider>
   );
 }
+

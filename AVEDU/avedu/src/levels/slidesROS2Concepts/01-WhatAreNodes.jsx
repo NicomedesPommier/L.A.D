@@ -35,7 +35,7 @@ export default function WhatAreNodes() {
             <li><b>Reusable:</b> Nodes can be combined in different ways</li>
           </ul>
         </div>
-        <div className="slide-callout slide-callout--info">
+        <div className="slide-callout slide-callout--info slide-mt-md">
           <b>Example:</b> A robot might have separate nodes for camera processing,
           motor control, path planning, and sensor fusion.
         </div>
@@ -43,25 +43,26 @@ export default function WhatAreNodes() {
 
       <div className="slide-card">
         <div className="slide-card__title">Why Use Nodes?</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+        <div className="slide-grid slide-grid--2 slide-gap-md">
           <div>
             <b>Modularity</b>
-            <p>Easy to develop, test, and debug individual components</p>
+            <p className="slide-text--sm slide-muted">Easy to develop, test, and debug individual components</p>
           </div>
           <div>
             <b>Fault Isolation</b>
-            <p>If one node crashes, others can keep running</p>
+            <p className="slide-text--sm slide-muted">If one node crashes, others can keep running</p>
           </div>
           <div>
             <b>Scalability</b>
-            <p>Add or remove functionality by adding/removing nodes</p>
+            <p className="slide-text--sm slide-muted">Add or remove functionality by adding/removing nodes</p>
           </div>
           <div>
             <b>Reusability</b>
-            <p>Use the same node in different robot systems</p>
+            <p className="slide-text--sm slide-muted">Use the same node in different robot systems</p>
           </div>
         </div>
       </div>
     </div>
   );
 }
+

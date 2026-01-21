@@ -47,7 +47,10 @@
       "Bash(docker compose:*)",
       "Bash(docker-compose version:*)",
       "Bash(wmctrl -l:*)",
-      "Bash(xdotool search:*)"
+      "Bash(xdotool search:*)",
+      "Bash(git config:*)",
+      "Bash(python3:*)",
+      "Bash(source ../.venv/bin/activate)"
     ],
     "deny": [],
     "ask": []
